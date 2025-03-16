@@ -1,5 +1,5 @@
-import express, { Request, Response } from "express";
 import { loadEnvVariables } from "./configs/env";
+import express, { Request, Response } from "express";
 
 loadEnvVariables();
 
