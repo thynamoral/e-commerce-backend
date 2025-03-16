@@ -1,10 +1,10 @@
 import { loadEnvVariables } from "../configs/env";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { usersTable } from "./schema";
+import { usersTable } from "./schema/users";
 
 loadEnvVariables();
 
-const db = drizzle(process.env.DATABASE_URL!);
+export const db = drizzle(process.env.DATABASE_URL!);
 
 async function main() {
   const user: typeof usersTable.$inferInsert = {
