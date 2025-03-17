@@ -13,23 +13,31 @@ export const authenticate = (
   res: Response,
   next: NextFunction
 ) => {
+  const authHeader = req.headers.authorization;
+  console.log(authHeader);
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res
+      .status(401)
+      .json({ message: "Unauthorized!" });
+    return;
+  }
+
   passport.authenticate(
     "jwt",
     { session: false },
     (err: any, user: any, info: any) => {
+          // console.log("Passport authentication callback executed");
+          // console.log("Error:", err);
+          // console.log("User:", user);
+          // console.log("Info:", info);
       if (err) {
         return next(err);
       }
 
-      if (!user) {
-        return res
-          .status(401)
-          .json({ message: "Unauthorized: Authentication required" });
-      }
-
-      // Add user to request object
+      // Attach user to request
       (req as AuthRequest).user = user;
-      return next();
+      next();
     }
   )(req, res, next);
 };
