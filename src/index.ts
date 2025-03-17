@@ -4,6 +4,7 @@ import authRouter from "./resources/auth/authRoute";
 import cookieParser from "cookie-parser";
 import passport from "passport";
 import { configurePassport } from "./configs/passport";
+import { connectDB } from "./db";
 
 loadEnvVariables();
 
@@ -17,6 +18,16 @@ configurePassport();
 // auth routes
 app.use("/auth", authRouter);
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server running at ${process.env.API_URL}!`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(process.env.PORT!, async () => {
+      console.log(`Server running at ${process.env.API_URL!}!`);
+    });
+  } catch (error) {
+    console.log(error);
+    process.exit(1);
+  }
+}
+
+startServer();

@@ -1,21 +1,24 @@
 import { loadEnvVariables } from "../configs/env";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { usersTable } from "./schema/users";
+import { Pool } from "pg";
 
 loadEnvVariables();
 
-export const db = drizzle(process.env.DATABASE_URL!);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL!,
+});
 
-// async function main() {
-//   const user: typeof usersTable.$inferInsert = {
-//     email: "testing@gmail.com",
-//   };
+pool.on("error", (err) => {
+  console.error("Database connection pool error:", err);
+});
 
-//   await db.insert(usersTable).values(user);
-//   console.log("Create new user!");
+export const db = drizzle({client: pool});
 
-//   const users = await db.select().from(usersTable);
-//   console.log("All users", users);
-// }
-
-// main();
+export async function connectDB() {
+  try {
+    await db.execute("SELECT 1"); 
+    console.log("Database connected successfully!");
+  } catch (error: any) {
+      throw new Error("Database connection failed!");
+  }
+}
