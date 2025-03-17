@@ -29,7 +29,10 @@ export class AuthService {
     }
 
     // hash password
-    const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUND!);
+    const hashedPassword = await bcrypt.hash(
+      password,
+      parseInt(process.env.SALT_ROUND!)
+    );
 
     // generate verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
@@ -64,7 +67,7 @@ export class AuthService {
       .where(eq(usersTable.email, email));
 
     if (users.length === 0) {
-      return null;
+      throw new Error("Invalid email or password!");
     }
 
     const user = users[0];
@@ -78,7 +81,7 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return null;
+      throw new Error("Invalid email or password!");
     }
 
     // Check if email is verified
@@ -92,6 +95,7 @@ export class AuthService {
     // Return user and tokens
     const {
       password: _,
+      googleId,
       isEmailVerified,
       resetPasswordToken,
       verificationToken,
@@ -242,7 +246,7 @@ export class AuthService {
     // Hash new password
     const hashedPassword = await bcrypt.hash(
       newPassword,
-      process.env.SALT_ROUND!
+      parseInt(process.env.SALT_ROUND!)
     );
 
     // Update password and clear reset token

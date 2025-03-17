@@ -33,14 +33,14 @@ export const configurePassport = () => {
           const user = users[0];
 
           // user with google account
-          if (!user.pasword) {
+          if (!user.password) {
             return done(null, false, {
               message: "Please log in with Google account!",
             });
           }
 
           // verify password
-          const isValidPassword = await bcrypt.compare(password, user.pasword);
+          const isValidPassword = await bcrypt.compare(password, user.password);
           if (!isValidPassword) {
             return done(null, false, { message: "Invalid email or password!" });
           }
@@ -65,20 +65,21 @@ export const configurePassport = () => {
     new JwtStrategy(
       {
         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-        secretOrKey: process.env.JWT_SCRET!,
+        secretOrKey: process.env.JWT_SECRET! as string,
       },
       async (payload, done) => {
         try {
+          // console.log("Verifying JWT Payload:", payload);
           // find user from JWT payload
           const users = await db
             .select()
             .from(usersTable)
-            .where(eq(usersTable.id, payload.sub));
+            .where(eq(usersTable.id, payload.userId));
 
           // invalid user
           if (users.length === 0) {
             return done(null, false, {
-              message: "Invalid email or password!",
+              message: "Invalid token!",
             });
           }
 
