@@ -6,12 +6,5 @@ export function loadEnvVariables() {
   const baseEnv = dotenv.config();
   dotenvExpand.expand(baseEnv);
 
-  process.env.NODE_ENV = process.env.NODE_ENV || "development";
-
-  // Load environment-specific file
-  const envFile = `.env.${process.env.NODE_ENV}`;
-  const envConfig = dotenv.config({ path: envFile });
-  dotenvExpand.expand(envConfig);
-
-  console.log(`Environment loaded: ${process.env.NODE_ENV || "development"}`);
+  console.log(`Environment loaded: ${process.env.NODE_ENV}`);
 }
