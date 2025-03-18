@@ -18,6 +18,10 @@ configurePassport();
 // auth routes
 app.use("/api/auth", authRouter);
 
+app.get("/", (req: Request, res: Response) => {
+  res.send("Hello World!");
+});
+
 const startServer = async () => {
   try {
     await connectDB();
