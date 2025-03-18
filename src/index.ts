@@ -16,7 +16,7 @@ app.use(passport.initialize());
 configurePassport();
 
 // auth routes
-app.use("/auth", authRouter);
+app.use("/api/auth", authRouter);
 
 const startServer = async () => {
   try {
@@ -28,6 +28,6 @@ const startServer = async () => {
     console.log(error);
     process.exit(1);
   }
-}
+};
 
 startServer();
