@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   boolean,
   pgTable,
@@ -5,6 +6,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { refreshTokenTable } from "./refreshTokens";
 
 export const usersTable = pgTable("USERS", {
   id: uuid().defaultRandom().primaryKey(),
@@ -21,3 +23,7 @@ export const usersTable = pgTable("USERS", {
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp().defaultNow(),
 });
+
+export const usersRelations = relations(usersTable, ({ one }) => ({
+  refreshToken: one(refreshTokenTable),
+}));
