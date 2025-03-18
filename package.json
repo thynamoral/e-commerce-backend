@@ -35,6 +35,8 @@
     "typescript-eslint": "^8.26.1"
   },
   "dependencies": {
+    "@aws-sdk/client-rds-data": "^3.758.0",
+    "@neondatabase/serverless": "^0.10.4",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "drizzle-orm": "^0.40.0",
