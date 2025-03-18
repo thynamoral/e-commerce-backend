@@ -6,6 +6,9 @@
     "outDir": "dist",
     "rootDir": "src",
     "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true
-  }
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": false
+  },
+  "exclude": ["drizzle.config.ts"]
 }
