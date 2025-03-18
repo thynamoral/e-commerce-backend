@@ -7,6 +7,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { refreshTokenTable } from "../../db/schema/refreshTokens";
+import nodemailer from "nodemailer";
 
 loadEnvVariables();
 
@@ -25,6 +26,23 @@ export class AuthService {
       .from(usersTable)
       .where(eq(usersTable.email, email));
     if (existedUser.length > 0) {
+      // email existed but not verify yet
+      if (!existedUser[0].isEmailVerified) {
+        const newVerificationToken = crypto.randomBytes(32).toString("hex");
+        const [updatedUserToken] = await db
+          .update(usersTable)
+          .set({
+            verificationToken: newVerificationToken,
+          })
+          .where(eq(usersTable.id, existedUser[0].id))
+          .returning();
+        await this.sendEmail(updatedUserToken, newVerificationToken);
+        return {
+          userId: updatedUserToken.id,
+          verificationToken: newVerificationToken,
+        };
+      }
+
       throw new Error("User with email already existed!");
     }
 
@@ -49,7 +67,50 @@ export class AuthService {
       })
       .returning();
 
+    await this.sendEmail(createdUser, verificationToken);
     return { userId: createdUser.id, verificationToken };
+  }
+
+  /**
+   * Send email to verify
+   */
+  async sendEmail(
+    userData: typeof usersTable.$inferSelect,
+    verificationToken: string
+  ) {
+    const verificationLink = `${process.env
+      .FRONTEND_URL!}/verify-email/${verificationToken}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      port: process.env.NODE === "development" ? 587 : 465,
+      secure: !(process.env.NODE === "development"),
+      auth: {
+        user: process.env.MAIL_FROM!,
+        pass: process.env.MAIL_PASSWORD!,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Momo E-Commerce" <${process.env.MAIL_FROM!}>`,
+      to: userData.email,
+      subject: "Verify Your Email - Momo E-Commerce",
+      text: `Welcome to Momo E-Commerce! Please verify your email by clicking the link below:\n\n${verificationLink}\n\nIf you did not sign up, please ignore this email.\n\nBest,\nMomo E-Commerce Team`,
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #3171af; text-align: center;">Welcome to Momo E-Commerce!</h2>
+        <p>Thank you for signing up! Please confirm your email address by clicking the button below:</p>
+        <p style="text-align: center;">
+          <a href="${verificationLink}" 
+            style="background-color: #3171af; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold; display: inline-block;">
+            Verify Email
+          </a>
+        </p>
+        <p>If you did not create an account, please ignore this email.</p>
+        <p>Best regards,<br/><strong>Momo E-Commerce Team</strong></p>
+      </div>
+    `,
+    });
   }
 
   /**

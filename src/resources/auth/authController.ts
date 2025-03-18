@@ -4,7 +4,6 @@ import passport from "passport";
 import { LoginInput, RegisterUserInput } from "./authModule";
 import { authService } from "./authService";
 import { AuthRequest } from "../../middlewares/authMiddleware";
-import nodemailer from "nodemailer";
 
 loadEnvVariables();
 
@@ -26,27 +25,6 @@ export class AuthController {
       const { userId, verificationToken } = await authService.registerUser(
         userData
       );
-
-      // Send verification email in a real application
-      const verificationLink = `${process.env
-        .FRONTEND_URL!}/verify-email/${verificationToken}`;
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        port: process.env.NODE === "development" ? 587 : 465,
-        secure: !(process.env.NODE === "development"),
-        auth: {
-          user: process.env.MAIL_FROM!,
-          pass: process.env.MAIL_PASSWORD!,
-        },
-      });
-
-      await transporter.sendMail({
-        from: process.env.MAIL_FROM!,
-        to: userData.email,
-        subject: "Verify your email",
-        text: `Click the link to verify: ${verificationLink}`,
-        html: `<p>Click the link to verify: <a href="${verificationLink}">here</a> to verify your account!</p>`,
-      });
 
       // For now, just return the verification token in development
       if (process.env.NODE_ENV === "development") {
