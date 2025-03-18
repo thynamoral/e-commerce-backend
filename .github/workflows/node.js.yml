@@ -27,6 +27,7 @@ jobs:
     - run: npm run build --if-present
     - run: touch .env
     - run: echo "${{ secrets.PRODUCTION_ENV_FILE }}" > .env
+    - run: pm2 restart e-commerce-backend
 
     
       
