@@ -83,8 +83,8 @@ export class AuthService {
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
-      port: process.env.NODE === "development" ? 587 : 465,
-      secure: !(process.env.NODE === "development"),
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.MAIL_FROM!,
         pass: process.env.MAIL_PASSWORD!,
