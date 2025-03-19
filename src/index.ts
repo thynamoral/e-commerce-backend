@@ -18,8 +18,8 @@ configurePassport();
 // auth routes
 app.use("/api/auth", authRouter);
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World!");
+app.get("/api/test", (req: Request, res: Response) => {
+  res.json([{ name: "test1" }, { name: "test2" }, { name: "test3" }]);
 });
 
 const startServer = async () => {
