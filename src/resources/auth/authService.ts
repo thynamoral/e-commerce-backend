@@ -209,12 +209,28 @@ export class AuthService {
       refreshExpires.getDate() + parseInt(process.env.JWT_REFRESH_EXPIRES_IN!)
     );
 
-    // store refresh token
-    await db.insert(refreshTokenTable).values({
-      userId,
-      token: refreshToken,
-      expiresAt: refreshExpires,
-    });
+    // check if refresh token of userId existed
+    const existedToken = await db
+      .select()
+      .from(refreshTokenTable)
+      .where(eq(refreshTokenTable.userId, userId));
+
+    if (existedToken.length > 0) {
+      await db
+        .update(refreshTokenTable)
+        .set({
+          token: refreshToken,
+          expiresAt: refreshExpires,
+        })
+        .where(eq(refreshTokenTable.userId, userId));
+    } else {
+      // store refresh token
+      await db.insert(refreshTokenTable).values({
+        userId,
+        token: refreshToken,
+        expiresAt: refreshExpires,
+      });
+    }
 
     return { accessToken, refreshToken };
   }
