@@ -5,12 +5,15 @@ import cookieParser from "cookie-parser";
 import passport from "passport";
 import { configurePassport } from "./configs/passport";
 import { connectDB } from "./db";
+import cors from "cors";
+import { corsOptions } from "./configs/cors";
 
 loadEnvVariables();
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors(corsOptions));
 app.use(passport.initialize());
 
 configurePassport();
