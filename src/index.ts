@@ -2,8 +2,6 @@ import { loadEnvVariables } from "./configs/env";
 import express, { Request, Response } from "express";
 import authRouter from "./resources/auth/authRoute";
 import cookieParser from "cookie-parser";
-import passport from "passport";
-import { configurePassport } from "./configs/passport";
 import { connectDB } from "./db";
 import cors from "cors";
 import { corsOptions } from "./configs/cors";
@@ -14,16 +12,9 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors(corsOptions));
-app.use(passport.initialize());
-
-configurePassport();
 
 // auth routes
 app.use("/api/auth", authRouter);
-
-app.get("/api/test", (req: Request, res: Response) => {
-  res.json([{ name: "test1" }, { name: "test2" }, { name: "test3" }]);
-});
 
 const startServer = async () => {
   try {
