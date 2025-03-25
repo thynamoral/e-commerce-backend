@@ -6,7 +6,6 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { refreshTokenTable } from "./refreshTokens";
 
 export const usersTable = pgTable("USERS", {
   id: uuid().defaultRandom().primaryKey(),
@@ -24,6 +23,4 @@ export const usersTable = pgTable("USERS", {
   updatedAt: timestamp().defaultNow(),
 });
 
-export const usersRelations = relations(usersTable, ({ one }) => ({
-  refreshToken: one(refreshTokenTable),
-}));
+export type User = typeof usersTable.$inferSelect;
