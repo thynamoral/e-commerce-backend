@@ -1,6 +1,5 @@
 import { loadEnvVariables } from "../../configs/env";
-import { Request, Response } from "express";
-import passport from "passport";
+import { NextFunction, Request, Response } from "express";
 import { LoginInput, RegisterUserInput } from "./authModule";
 import { authService } from "./authService";
 import { AuthRequest } from "../../middlewares/authMiddleware";
@@ -85,89 +84,62 @@ export class AuthController {
       // @ts-ignore
       const { user, tokens } = result;
 
-      // add user to req body
-      // req.user = user;
+      // Set HTTP-only, secure acess token cookie
+      res.cookie("accessToken", tokens.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+      });
 
-      // Set HTTP-only, secure refresh token cookie
       res.cookie("refreshToken", tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
         path: "/api/auth/refresh-token",
       });
 
-      // Send accessToken in the response body
+      // Send user in the response body
       res.json({
         message: "Login successful",
-        user,
-        accessToken: tokens.accessToken,
       });
     } catch (error: any) {
       console.error(error.message);
-      res.status(500).json({ message: error.message });
+      if (
+        error.message === "Invalid email or password!" ||
+        error.message === "Please verify your email before logging in!"
+      ) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Internal Server Error!" });
+      }
     }
   }
 
   /**
-   * Login or signup with Google
+   * Refresh token for new access token
    */
-  googleAuth(req: Request, res: Response) {
-    passport.authenticate("google", { scope: ["profile", "email"] })(req, res);
-  }
+  async refreshToken(req: Request, res: Response, next: NextFunction) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken)
+      return res.status(401).json({ message: "Unauthorized!" });
 
-  /**
-   * Google OAuth callback
-   */
-  async googleCallback(req: Request, res: Response) {
-    passport.authenticate("google", { session: false }, async (err, user) => {
-      if (err) {
-        return res.status(500).json({ message: "Authentication failed" });
-      }
-
-      if (!user) {
-        return res.status(401).json({ message: "Authentication failed" });
-      }
-
-      try {
-        // Generate tokens
-        const tokens = await authService.generateToken(user.id);
-
-        // Redirect to frontend with tokens
-        const redirectUrl = new URL(
-          process.env.FRONTEND_URL + "/auth/callback"
-        );
-        redirectUrl.searchParams.append("accessToken", tokens.accessToken);
-        redirectUrl.searchParams.append("refreshToken", tokens.refreshToken);
-
-        res.redirect(redirectUrl.toString());
-      } catch (error: any) {
-        res.status(500).json({ message: error.message });
-      }
-    })(req, res);
-  }
-
-  /**
-   * Refresh access token
-   */
-  async refreshToken(req: Request, res: Response) {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      const { accessToken } = authService.refreshToken(refreshToken);
+      // Set HTTP-only, secure acess token cookie
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+      });
 
-      if (!refreshToken) {
-        return res.status(401).json({ message: "Unauthorized!" });
-      }
-
-      const accessToken = await authService.refreshAccessToken(refreshToken);
-
-      if (!accessToken) {
-        return res
-          .status(401)
-          .json({ message: "Invalid or expired refresh token" });
-      }
-
-      res.json({ accessToken });
+      return res.status(200).json({ message: "Refreshed accessToken!" });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error(error);
+      if (error.message === "Inavalid refreshToken!")
+        return res.status(401).json({ message: error.message });
+      else return res.status(500).json({ message: "Internal Server Error" });
     }
   }
 
@@ -236,22 +208,10 @@ export class AuthController {
   /**
    * Logout user
    */
-  async logout(req: AuthRequest, res: Response) {
-    console.log(`user`, req?.user);
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      await authService.logout(req.user.id);
-
-      // Clear refresh token cookie
-      res.clearCookie("refreshToken", { path: "/auth/refresh-token" });
-
-      res.json({ message: "Logged out successfully" });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
+  async logout(req: Request, res: Response) {
+    res.clearCookie("accessToken", { path: "/" });
+    res.clearCookie("refreshToken", { path: "/api/auth/refresh-token" });
+    res.status(200).json({ message: "Logged out successfully" });
   }
 
   /**
@@ -275,27 +235,6 @@ export class AuthController {
     } = req.user;
 
     res.json({ user: userWithoutPassword });
-  }
-
-  /**
-   * Create admin user (for development/initial setup)
-   */
-  async createAdmin(req: Request, res: Response) {
-    try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        return res
-          .status(400)
-          .json({ message: "Email and password are required" });
-      }
-
-      await authService.createAdminUser(email, password);
-
-      res.json({ message: "Admin user created or updated successfully" });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
   }
 }
 

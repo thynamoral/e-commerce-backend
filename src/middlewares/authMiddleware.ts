@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import passport from "passport";
+import { verifyAccessToken } from "../utils/jwtUtils";
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -12,34 +12,24 @@ export const authenticate = (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
-  const authHeader = req.headers.authorization;
-  console.log(authHeader);
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res
-      .status(401)
-      .json({ message: "Unauthorized!" });
+): void => {
+  const accessToken = req.cookies.accessToken;
+  if (!accessToken) {
+    res.status(401).json({ message: "Unauthorized!" });
     return;
   }
 
-  passport.authenticate(
-    "jwt",
-    { session: false },
-    (err: any, user: any, info: any) => {
-          // console.log("Passport authentication callback executed");
-          // console.log("Error:", err);
-          // console.log("User:", user);
-          // console.log("Info:", info);
-      if (err) {
-        return next(err);
-      }
-
-      // Attach user to request
-      (req as AuthRequest).user = user;
-      next();
+  try {
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      res.status(401).json({ message: "Unauthorized!" });
+      return;
     }
-  )(req, res, next);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(403).json({ message: "Invalid or expired token!" });
+  }
 };
 
 /**

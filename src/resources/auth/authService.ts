@@ -5,9 +5,12 @@ import { usersTable } from "../../db/schema/users";
 import { AuthTokens, LoginInput, RegisterUserInput } from "./authModule";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
-import { refreshTokenTable } from "../../db/schema/refreshTokens";
 import nodemailer from "nodemailer";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../../utils/jwtUtils";
 
 loadEnvVariables();
 
@@ -118,7 +121,7 @@ export class AuthService {
    */
   async login(
     loginData: LoginInput
-  ): Promise<{ user: any; tokens: AuthTokens } | null> {
+  ): Promise<{ user: any; tokens: AuthTokens }> {
     const { email, password } = loginData;
 
     // Find user by email
@@ -133,13 +136,11 @@ export class AuthService {
 
     const user = users[0];
 
-    // Check if user has password (might be Google OAuth user)
-    if (!user.password) {
-      throw new Error("Please sign in with Google");
-    }
-
     // Check if password is correct
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password as string
+    );
 
     if (!isPasswordValid) {
       throw new Error("Invalid email or password!");
@@ -147,11 +148,13 @@ export class AuthService {
 
     // Check if email is verified
     if (!user.isEmailVerified) {
-      throw new Error("Please verify your email before logging in");
+      throw new Error("Please verify your email before logging in!");
     }
 
     // Generate tokens
-    const tokens = await this.generateToken(user.id);
+    const accessToken = generateAccessToken(user.id, user.role);
+    const refreshToken = generateRefreshToken(user.id, user.role);
+    const tokens: AuthTokens = { accessToken, refreshToken };
 
     // Return user and tokens
     const {
@@ -166,6 +169,18 @@ export class AuthService {
       ...userWithoutPassword
     } = user;
     return { user: userWithoutPassword, tokens };
+  }
+
+  /**
+   * Refresh token for new access token
+   */
+  refreshToken(refreshToken: string) {
+    const decoded = verifyRefreshToken(refreshToken);
+    if (!decoded) {
+      throw new Error("Inavalid refreshToken!");
+    }
+    const newAccessToken = generateAccessToken(decoded.userId, decoded.role);
+    return { accessToken: newAccessToken };
   }
 
   /**
@@ -194,81 +209,25 @@ export class AuthService {
   }
 
   /**
-   * generate access token and refresh token
+   * generate access token token
    */
-  async generateToken(userId: string): Promise<AuthTokens> {
-    // generate access token
-    const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
-      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN! as any,
-    });
+  // async generateToken(userId: string): Promise<AuthTokens> {
+  //   // find user role
+  //   const userRole = await db
+  //     .select()
+  //     .from(usersTable)
+  //     .where(eq(usersTable.id, userId));
+  //   // generate access token
+  //   const accessToken = jwt.sign(
+  //     { userId, role: userRole[0].role },
+  //     process.env.JWT_SECRET!,
+  //     {
+  //       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN! as any,
+  //     }
+  //   );
 
-    // generate refresh token
-    const refreshToken = crypto.randomBytes(32).toString("hex");
-    const refreshExpires = new Date();
-    refreshExpires.setDate(
-      refreshExpires.getDate() + parseInt(process.env.JWT_REFRESH_EXPIRES_IN!)
-    );
-
-    // check if refresh token of userId existed
-    const existedToken = await db
-      .select()
-      .from(refreshTokenTable)
-      .where(eq(refreshTokenTable.userId, userId));
-
-    if (existedToken.length > 0) {
-      await db
-        .update(refreshTokenTable)
-        .set({
-          token: refreshToken,
-          expiresAt: refreshExpires,
-        })
-        .where(eq(refreshTokenTable.userId, userId));
-    } else {
-      // store refresh token
-      await db.insert(refreshTokenTable).values({
-        userId,
-        token: refreshToken,
-        expiresAt: refreshExpires,
-      });
-    }
-
-    return { accessToken, refreshToken };
-  }
-
-  /**
-   * refresh access token using refresh token
-   */
-  async refreshAccessToken(refreshToken: string): Promise<string | null> {
-    // find refresh token
-    const tokens = await db
-      .select({
-        id: refreshTokenTable.id,
-        userId: refreshTokenTable.userId,
-        expiresIn: refreshTokenTable.expiresAt,
-      })
-      .from(refreshTokenTable)
-      .where(eq(refreshTokenTable.token, refreshToken));
-
-    if (tokens.length === 0) {
-      return null;
-    }
-
-    // found refresh token
-    const token = tokens[0];
-
-    // check if refresh token is expired
-    if (new Date() > token.expiresIn) {
-      await db
-        .delete(refreshTokenTable)
-        .where(eq(refreshTokenTable.id, token.id));
-      return null;
-    }
-
-    // generate new access token
-    return jwt.sign({ userId: token.userId }, process.env.JWT_SECRET!, {
-      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN! as any,
-    });
-  }
+  //   return { accessToken };
+  // }
 
   /**
    * Request password reset
@@ -342,11 +301,7 @@ export class AuthService {
   /**
    * Logout user by invalidating refresh tokens
    */
-  async logout(userId: string): Promise<void> {
-    await db
-      .delete(refreshTokenTable)
-      .where(eq(refreshTokenTable.userId, userId));
-  }
+  async logout(userId: string): Promise<void> {}
 
   /**
    * Create admin user
