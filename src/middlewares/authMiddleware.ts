@@ -1,6 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyAccessToken } from "../utils/jwtUtils";
 
+declare module "express" {
+  interface Request {
+    user?: {
+      id: string;
+      role: string;
+    };
+  }
+}
+
 export interface AuthRequest extends Request {
   user?: any;
 }
@@ -9,7 +18,7 @@ export interface AuthRequest extends Request {
  * Authentication middleware using JWT
  */
 export const authenticate = (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): void => {
