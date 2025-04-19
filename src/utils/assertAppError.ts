@@ -12,7 +12,7 @@ type AssertAppError = (
 /**
  * Asserts the given condition and throw an error if it is falsy.
  */
-const assertAppError: AssertAppError = (
+export const assertAppError: AssertAppError = (
   condition,
   message,
   statusCode,

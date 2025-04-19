@@ -8,3 +8,4 @@ const getENV = (key: string, defaultValue?: string) => {
 };
 
 export const PORT = getENV("PORT");
+export const DATABASE_URL = getENV("DATABASE_URL");
