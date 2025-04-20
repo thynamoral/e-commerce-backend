@@ -1,11 +1,17 @@
 import db from "../configs/db.config";
 import { FRONTEND_URL } from "../configs/env.config";
+import { Session } from "../entities/Session.entity";
 import User from "../entities/User.entity";
 import { VerificationCode } from "../entities/VerificationCode.entity";
 import { assertAppError } from "../utils/assertAppError";
 import { comparePassword, hashPassword } from "../utils/bcrypt";
 import { getVerifyEmailTemplate, sendEmail } from "../utils/email";
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "../utils/httpStatus";
+import {
+  BAD_REQUEST,
+  INTERNAL_SERVER_ERROR,
+  UNAUTHORIZED,
+} from "../utils/httpStatus";
+import { defaultRefreshTokenSignOptions, signToken } from "../utils/jwt";
 import { VerificationType } from "../utils/verificationType";
 
 type RegisterAccountParams = {
@@ -13,7 +19,7 @@ type RegisterAccountParams = {
   password: string;
 };
 
-export const registerAccount = async (payload: RegisterAccountParams) => {
+const registerAccount = async (payload: RegisterAccountParams) => {
   // check if email exists
   const { rows: existedUser } = await db.query<User>(
     "SELECT * FROM users WHERE email = $1",
@@ -50,4 +56,65 @@ export const registerAccount = async (payload: RegisterAccountParams) => {
   );
 
   return createdUser[0];
+};
+
+type LoginParams = {
+  email: string;
+  password: string;
+};
+
+const login = async (loginPayload: LoginParams) => {
+  // check if email exists
+  const { rows: existedUser } = await db.query<User>(
+    "SELECT * FROM users WHERE email = $1",
+    [loginPayload.email]
+  );
+  assertAppError(
+    existedUser.length > 0,
+    "Invalid email or password",
+    UNAUTHORIZED
+  );
+  console.log(existedUser[0]);
+  // check if user is verified
+  assertAppError(
+    existedUser[0].isverified,
+    "Please verify your email address",
+    UNAUTHORIZED
+  );
+
+  // check if password matches
+  const isValidPassword = await comparePassword(
+    loginPayload.password,
+    existedUser[0].password
+  );
+  assertAppError(isValidPassword, "Invalid email or password", UNAUTHORIZED);
+
+  // create session
+  const { rows: createdSession, rowCount } = await db.query<Session>(
+    "INSERT INTO sessions (user_id) VALUES ($1) RETURNING *",
+    [existedUser[0].user_id]
+  );
+  assertAppError(
+    rowCount === 1 && createdSession[0].session_id,
+    "Internal Server Error",
+    INTERNAL_SERVER_ERROR
+  );
+
+  // sign tokens
+  const accessToken = signToken({
+    user_id: existedUser[0].user_id,
+    session_id: createdSession[0].session_id,
+    role: existedUser[0].role,
+  });
+  const refreshToken = signToken({
+    session_id: createdSession[0].session_id,
+    ...defaultRefreshTokenSignOptions,
+  });
+
+  return { user: existedUser[0], accessToken, refreshToken };
+};
+
+export default {
+  registerAccount,
+  login,
 };
