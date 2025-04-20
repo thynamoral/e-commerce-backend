@@ -39,16 +39,7 @@ const registerAccount = async (payload: RegisterAccountParams) => {
   );
 
   // send email verification
-  const { rows: createdVerificationCode } = await db.query<VerificationCode>(
-    "INSERT INTO verification_codes (user_id, type) VALUES ($1, $2) RETURNING *",
-    [createdUser[0].user_id, VerificationType.VERIFY_EMAIL]
-  );
-  const url = `${FRONTEND_URL}/email/verify/${createdVerificationCode[0].verification_code_id}`;
-  const { error } = await sendEmail({
-    to: createdUser[0].email,
-    ...getVerifyEmailTemplate(url),
-  });
-
+  const { error } = await sendEmailVerification(createdUser[0]);
   assertAppError(
     !error,
     "Failed to send email verification",
@@ -56,6 +47,20 @@ const registerAccount = async (payload: RegisterAccountParams) => {
   );
 
   return createdUser[0];
+};
+
+const sendEmailVerification = async (user: User) => {
+  const { rows: createdVerificationCode } = await db.query<VerificationCode>(
+    "INSERT INTO verification_codes (user_id, type) VALUES ($1, $2) RETURNING *",
+    [user.user_id, VerificationType.VERIFY_EMAIL]
+  );
+  const expiredMs = new Date(createdVerificationCode[0].expiredat).getTime();
+  const url = `${FRONTEND_URL}/email/verify?code${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
+  const { error } = await sendEmail({
+    to: user.email,
+    ...getVerifyEmailTemplate(url),
+  });
+  return { error };
 };
 
 type LoginParams = {

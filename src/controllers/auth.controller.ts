@@ -25,7 +25,7 @@ export const loginHandler = asyncRequestHandler(async (req, res) => {
   // set cookies
   setAuthCookies(res, accessToken, refreshToken);
   // response
-  const { password, ...userWithoutPassword } = user;
+  const { password, createdAt, updatedAt, ...userWithoutPassword } = user;
   res
     .status(OK)
     .json({ user: userWithoutPassword, message: "Logged in successfully" });
