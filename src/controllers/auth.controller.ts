@@ -4,8 +4,9 @@ import {
 } from "../validation-schema/auth.schema";
 import asyncRequestHandler from "../utils/asyncRequestHandler";
 import authService from "../services/auth.service";
-import { CREATED, OK } from "../utils/httpStatus";
+import { BAD_REQUEST, CREATED, OK } from "../utils/httpStatus";
 import { clearAuthCookies, setAuthCookies } from "../utils/cookie";
+import { assertAppError } from "../utils/assertAppError";
 
 export const registerAccountHandler = asyncRequestHandler(async (req, res) => {
   // validation body
@@ -29,6 +30,16 @@ export const loginHandler = asyncRequestHandler(async (req, res) => {
   res
     .status(OK)
     .json({ user: userWithoutPassword, message: "Logged in successfully" });
+});
+
+export const emailVerifyHandler = asyncRequestHandler(async (req, res) => {
+  // validation query
+  const { code } = req.query as { code: string | undefined };
+  assertAppError(code, "Invalid verification code", BAD_REQUEST);
+  // call service
+  await authService.verifyEmail(code);
+  // response
+  res.status(OK).json({ message: "Email verified successfully" });
 });
 
 export const logoutHandler = asyncRequestHandler(async (req, res) => {

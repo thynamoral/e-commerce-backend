@@ -55,7 +55,7 @@ const sendEmailVerification = async (user: User) => {
     [user.user_id, VerificationType.VERIFY_EMAIL]
   );
   const expiredMs = new Date(createdVerificationCode[0].expiredat).getTime();
-  const url = `${FRONTEND_URL}/email/verify?code${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
+  const url = `${FRONTEND_URL}/email/verify?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
   const { error } = await sendEmail({
     to: user.email,
     ...getVerifyEmailTemplate(url),
@@ -119,7 +119,51 @@ const login = async (loginPayload: LoginParams) => {
   return { user: existedUser[0], accessToken, refreshToken };
 };
 
+const verifyEmail = async (code: string) => {
+  // check if code exists
+  const { rows: existedVerificationCode } = await db.query<VerificationCode>(
+    "SELECT * FROM verification_codes WHERE verification_code_id = $1",
+    [code]
+  );
+  assertAppError(
+    existedVerificationCode.length > 0,
+    "Invalid or expired verification code",
+    BAD_REQUEST
+  );
+
+  // check if code is expired
+  const expiredMs = new Date(existedVerificationCode[0].expiredat).getTime();
+  assertAppError(
+    expiredMs > Date.now(),
+    "Invalid or expired verification code",
+    BAD_REQUEST
+  );
+
+  // update user
+  const { rowCount: updatedRowCount } = await db.query(
+    "UPDATE users SET isverified = true WHERE user_id = $1",
+    [existedVerificationCode[0].user_id]
+  );
+  assertAppError(
+    updatedRowCount === 1,
+    "Failed to verify email",
+    INTERNAL_SERVER_ERROR
+  );
+
+  // delete verification code
+  const { rowCount: deletedRowCount } = await db.query(
+    "DELETE FROM verification_codes WHERE verification_code_id = $1",
+    [existedVerificationCode[0].verification_code_id]
+  );
+  assertAppError(
+    deletedRowCount === 1,
+    "Failed to verify email",
+    INTERNAL_SERVER_ERROR
+  );
+};
+
 export default {
   registerAccount,
   login,
+  verifyEmail,
 };
