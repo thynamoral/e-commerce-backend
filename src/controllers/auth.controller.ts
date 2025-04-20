@@ -5,7 +5,7 @@ import {
 import asyncRequestHandler from "../utils/asyncRequestHandler";
 import authService from "../services/auth.service";
 import { CREATED, OK } from "../utils/httpStatus";
-import { setAuthCookies } from "../utils/cookie";
+import { clearAuthCookies, setAuthCookies } from "../utils/cookie";
 
 export const registerAccountHandler = asyncRequestHandler(async (req, res) => {
   // validation body
@@ -29,4 +29,11 @@ export const loginHandler = asyncRequestHandler(async (req, res) => {
   res
     .status(OK)
     .json({ user: userWithoutPassword, message: "Logged in successfully" });
+});
+
+export const logoutHandler = asyncRequestHandler(async (req, res) => {
+  // clear cookies
+  clearAuthCookies(res);
+  // response
+  res.status(OK).json({ message: "Logged out successfully" });
 });
