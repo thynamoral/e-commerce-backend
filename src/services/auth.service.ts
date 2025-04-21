@@ -5,10 +5,16 @@ import User from "../entities/User.entity";
 import { VerificationCode } from "../entities/VerificationCode.entity";
 import { assertAppError } from "../utils/assertAppError";
 import { comparePassword, hashPassword } from "../utils/bcrypt";
-import { getVerifyEmailTemplate, sendEmail } from "../utils/email";
+import { convertToMs, tenMinutesAgo } from "../utils/date";
+import {
+  getPasswordResetTemplate,
+  getVerifyEmailTemplate,
+  sendEmail,
+} from "../utils/email";
 import {
   BAD_REQUEST,
   INTERNAL_SERVER_ERROR,
+  TOO_MANY_REQUESTS,
   UNAUTHORIZED,
 } from "../utils/httpStatus";
 import { defaultRefreshTokenSignOptions, signToken } from "../utils/jwt";
@@ -50,11 +56,23 @@ const registerAccount = async (payload: RegisterAccountParams) => {
 };
 
 const sendEmailVerification = async (user: User) => {
+  // rate limit to only 2 requests in last 10 minutes
+  const { rows: existedVerificationCode, rowCount } =
+    await db.query<VerificationCode>(
+      "SELECT * FROM verification_codes WHERE user_id = $1 AND type = $2 AND createdat > $3",
+      [user.user_id, VerificationType.VERIFY_EMAIL, tenMinutesAgo()]
+    );
+  assertAppError(
+    existedVerificationCode.length < 2 && rowCount! <= 1,
+    "Too many requests, please try again later",
+    TOO_MANY_REQUESTS
+  );
+
   const { rows: createdVerificationCode } = await db.query<VerificationCode>(
     "INSERT INTO verification_codes (user_id, type) VALUES ($1, $2) RETURNING *",
     [user.user_id, VerificationType.VERIFY_EMAIL]
   );
-  const expiredMs = new Date(createdVerificationCode[0].expiredat).getTime();
+  const expiredMs = convertToMs(createdVerificationCode[0].expiredat);
   const url = `${FRONTEND_URL}/email/verify?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
   const { error } = await sendEmail({
     to: user.email,
@@ -132,7 +150,7 @@ const verifyEmail = async (code: string) => {
   );
 
   // check if code is expired
-  const expiredMs = new Date(existedVerificationCode[0].expiredat).getTime();
+  const expiredMs = convertToMs(existedVerificationCode[0].expiredat);
   assertAppError(
     expiredMs > Date.now(),
     "Invalid or expired verification code",
@@ -162,8 +180,62 @@ const verifyEmail = async (code: string) => {
   );
 };
 
+type ForgotPasswordParams = {
+  email: string;
+};
+
+const forgotPassword = async (forgotPasswordPayload: ForgotPasswordParams) => {
+  // check if email exists
+  const { rows: existedUser } = await db.query<User>(
+    "SELECT * FROM users WHERE email = $1",
+    [forgotPasswordPayload.email]
+  );
+  assertAppError(
+    existedUser.length > 0,
+    "Invalid email or password",
+    BAD_REQUEST
+  );
+
+  // rate limit to only 2 requests in last 10 minutes
+  const { rows: existedVerificationCode, rowCount } =
+    await db.query<VerificationCode>(
+      "SELECT * FROM verification_codes WHERE user_id = $1 AND type = $2 AND createdat > $3",
+      [existedUser[0].user_id, VerificationType.RESET_PASSWORD, tenMinutesAgo()]
+    );
+  assertAppError(
+    existedVerificationCode.length < 2 && rowCount! <= 1,
+    "Too many requests, please try again later",
+    TOO_MANY_REQUESTS
+  );
+
+  // add verification code
+  const { rows: createdVerificationCode } = await db.query<VerificationCode>(
+    "INSERT INTO verification_codes (user_id, type) VALUES ($1, $2) RETURNING *",
+    [existedUser[0].user_id, VerificationType.RESET_PASSWORD]
+  );
+  assertAppError(
+    createdVerificationCode.length === 1,
+    "Failed to request password reset, Internal Server Error",
+    INTERNAL_SERVER_ERROR
+  );
+
+  // send email verification
+  const expiredMs = convertToMs(createdVerificationCode[0].expiredat);
+  const url = `${FRONTEND_URL}/password/reset?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
+  const { error } = await sendEmail({
+    to: existedUser[0].email,
+    ...getPasswordResetTemplate(url),
+  });
+  assertAppError(
+    !error,
+    "Failed to request password reset, Internal Server Error",
+    INTERNAL_SERVER_ERROR
+  );
+};
+
 export default {
   registerAccount,
   login,
   verifyEmail,
+  forgotPassword,
 };

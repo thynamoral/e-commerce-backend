@@ -1,4 +1,6 @@
 import {
+  emailSchema,
+  forgotPasswordSchema,
   loginSchema,
   registerAccountSchema,
 } from "../validation-schema/auth.schema";
@@ -14,7 +16,9 @@ export const registerAccountHandler = asyncRequestHandler(async (req, res) => {
   // call service
   await authService.registerAccount({ email, password });
   // response
-  res.status(CREATED).json({ message: "Account created successfully" });
+  res
+    .status(CREATED)
+    .json({ message: "Please check your email to verify your account!" });
 });
 
 export const loginHandler = asyncRequestHandler(async (req, res) => {
@@ -26,7 +30,7 @@ export const loginHandler = asyncRequestHandler(async (req, res) => {
   // set cookies
   setAuthCookies(res, accessToken, refreshToken);
   // response
-  const { password, createdAt, updatedAt, ...userWithoutPassword } = user;
+  const { password, createdat, updatedat, ...userWithoutPassword } = user;
   res
     .status(OK)
     .json({ user: userWithoutPassword, message: "Logged in successfully" });
@@ -40,6 +44,18 @@ export const emailVerifyHandler = asyncRequestHandler(async (req, res) => {
   await authService.verifyEmail(code);
   // response
   res.status(OK).json({ message: "Email verified successfully" });
+});
+
+export const forgotPasswordHandler = asyncRequestHandler(async (req, res) => {
+  // validation body
+  const { email } = forgotPasswordSchema.parse({ email: req.body.email });
+  // call service
+  await authService.forgotPassword({ email });
+  // response
+  res.status(OK).json({
+    message:
+      "Password reset email sent successfully, Please check your email for further instructions!",
+  });
 });
 
 export const logoutHandler = asyncRequestHandler(async (req, res) => {

@@ -4,8 +4,8 @@ type User = {
   password: string;
   isverified: boolean;
   role: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdat: Date;
+  updatedat: Date;
 };
 
 export default User;
