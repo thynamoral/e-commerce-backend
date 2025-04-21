@@ -14,6 +14,7 @@ import {
 import {
   BAD_REQUEST,
   INTERNAL_SERVER_ERROR,
+  NOT_FOUND,
   TOO_MANY_REQUESTS,
   UNAUTHORIZED,
 } from "../utils/httpStatus";
@@ -233,9 +234,65 @@ const forgotPassword = async (forgotPasswordPayload: ForgotPasswordParams) => {
   );
 };
 
+type ResetPasswordParams = {
+  code: string;
+  password: string;
+  confirmPassword: string;
+};
+
+const resetPassword = async (resetPasswordPayload: ResetPasswordParams) => {
+  // check if code exists and is not expired
+  const { rows: existedVerificationCode } = await db.query<VerificationCode>(
+    "SELECT * FROM verification_codes WHERE verification_code_id = $1 AND expiredat > $2 AND type = $3",
+    [resetPasswordPayload.code, new Date(), VerificationType.RESET_PASSWORD]
+  );
+  assertAppError(
+    existedVerificationCode.length > 0,
+    "Invalid or expired verification code",
+    NOT_FOUND
+  );
+
+  // update user
+  const { rowCount: updatedRowCount } = await db.query<User>(
+    "UPDATE users SET password = $1 WHERE user_id = $2",
+    [
+      await hashPassword(resetPasswordPayload.password),
+      existedVerificationCode[0].user_id,
+    ]
+  );
+  assertAppError(
+    updatedRowCount === 1,
+    "Failed to reset password",
+    INTERNAL_SERVER_ERROR
+  );
+
+  // delete verification code
+  const { rowCount: deletedRowCount } = await db.query<VerificationCode>(
+    "DELETE FROM verification_codes WHERE verification_code_id = $1",
+    [existedVerificationCode[0].verification_code_id]
+  );
+  assertAppError(
+    deletedRowCount! > 0,
+    "Failed to reset password",
+    INTERNAL_SERVER_ERROR
+  );
+
+  // delete all user's sessions
+  const { rowCount: deletedSessions } = await db.query<Session>(
+    "DELETE FROM sessions WHERE user_id = $1",
+    [existedVerificationCode[0].user_id]
+  );
+  assertAppError(
+    deletedSessions! > 0,
+    "Failed to reset password",
+    INTERNAL_SERVER_ERROR
+  );
+};
+
 export default {
   registerAccount,
   login,
   verifyEmail,
   forgotPassword,
+  resetPassword,
 };

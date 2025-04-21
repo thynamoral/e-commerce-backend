@@ -3,6 +3,7 @@ import {
   forgotPasswordSchema,
   loginSchema,
   registerAccountSchema,
+  resetPasswordSchema,
 } from "../validation-schema/auth.schema";
 import asyncRequestHandler from "../utils/asyncRequestHandler";
 import authService from "../services/auth.service";
@@ -55,6 +56,17 @@ export const forgotPasswordHandler = asyncRequestHandler(async (req, res) => {
   res.status(OK).json({
     message:
       "Password reset email sent successfully, Please check your email for further instructions!",
+  });
+});
+
+export const resetPasswordHandler = asyncRequestHandler(async (req, res) => {
+  // validation body
+  const resetPasswordPayload = resetPasswordSchema.parse(req.body);
+  // call service
+  await authService.resetPassword(resetPasswordPayload);
+  // response
+  res.status(OK).json({
+    message: "Password reset successfully",
   });
 });
 
