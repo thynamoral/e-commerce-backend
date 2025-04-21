@@ -1,7 +1,7 @@
 import HTTP_STATUS_CODE from "./httpStatus";
 
 export const enum AppErrorCode {
-  INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
+  INVALID_ACCESS_TOKEN = "INVALID_ACCESS_TOKEN",
 }
 
 class AppError extends Error {

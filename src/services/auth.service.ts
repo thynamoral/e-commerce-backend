@@ -1,11 +1,11 @@
 import db from "../configs/db.config";
-import { FRONTEND_URL } from "../configs/env.config";
+import { FRONTEND_URL, JWT_REFRESH_SECRET } from "../configs/env.config";
 import { Session } from "../entities/Session.entity";
 import User from "../entities/User.entity";
 import { VerificationCode } from "../entities/VerificationCode.entity";
 import { assertAppError } from "../utils/assertAppError";
 import { comparePassword, hashPassword } from "../utils/bcrypt";
-import { convertToMs, tenMinutesAgo } from "../utils/date";
+import { convertToMs, sevenDaysFromNow, tenMinutesAgo } from "../utils/date";
 import {
   getPasswordResetTemplate,
   getVerifyEmailTemplate,
@@ -18,7 +18,12 @@ import {
   TOO_MANY_REQUESTS,
   UNAUTHORIZED,
 } from "../utils/httpStatus";
-import { defaultRefreshTokenSignOptions, signToken } from "../utils/jwt";
+import {
+  defaultRefreshTokenSignOptions,
+  RefreshTokenPayload,
+  signToken,
+  verifyToken,
+} from "../utils/jwt";
 import { VerificationType } from "../utils/verificationType";
 
 type RegisterAccountParams = {
@@ -130,10 +135,10 @@ const login = async (loginPayload: LoginParams) => {
     session_id: createdSession[0].session_id,
     role: existedUser[0].role,
   });
-  const refreshToken = signToken({
-    session_id: createdSession[0].session_id,
-    ...defaultRefreshTokenSignOptions,
-  });
+  const refreshToken = signToken(
+    { session_id: createdSession[0].session_id },
+    { secret: defaultRefreshTokenSignOptions.secret }
+  );
 
   return { user: existedUser[0], accessToken, refreshToken };
 };
@@ -289,10 +294,49 @@ const resetPassword = async (resetPasswordPayload: ResetPasswordParams) => {
   );
 };
 
+const refreshToken = async (refreshToken: string) => {
+  // verify refreshToken
+  console.log(refreshToken);
+  const { decodedPayload, error } = verifyToken<RefreshTokenPayload>(
+    refreshToken,
+    { secret: defaultRefreshTokenSignOptions.secret }
+  );
+  assertAppError(
+    decodedPayload,
+    "Invalid or expired refreshToken",
+    UNAUTHORIZED
+  );
+
+  // verify session
+  const { rows: existedSession } = await db.query<Session>(
+    "SELECT * FROM sessions WHERE session_id = $1 AND expiredat > $2",
+    [decodedPayload.session_id, new Date()]
+  );
+  assertAppError(
+    existedSession.length > 0,
+    "Invalid or expired session",
+    UNAUTHORIZED
+  );
+
+  // sign tokens
+  const { rows: user } = await db.query<User>(
+    "SELECT * FROM users WHERE user_id = $1",
+    [existedSession[0].user_id]
+  );
+  const accessToken = signToken({
+    user_id: existedSession[0].user_id,
+    session_id: existedSession[0].session_id,
+    role: user[0].role,
+  });
+
+  return { accessToken };
+};
+
 export default {
   registerAccount,
   login,
   verifyEmail,
   forgotPassword,
   resetPassword,
+  refreshToken,
 };

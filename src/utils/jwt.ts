@@ -2,12 +2,12 @@ import jwt, { Secret, SignOptions, VerifyOptions } from "jsonwebtoken";
 import User from "../entities/User.entity";
 import { JWT_ACESS_SECRET, JWT_REFRESH_SECRET } from "../configs/env.config";
 
-type AcessTokenPayload = {
+export type AcessTokenPayload = {
   user_id: string;
   session_id: string;
   role: string;
 };
-type RefreshTokenPayload = {
+export type RefreshTokenPayload = {
   session_id: string;
 };
 

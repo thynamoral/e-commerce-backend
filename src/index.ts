@@ -5,12 +5,18 @@ import { PORT } from "./configs/env.config";
 import errorHandlder from "./utils/errorHandler";
 import authRouter from "./routers/auth.router";
 import { connectDB } from "./configs/db.config";
+import cors from "cors";
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(
+  cors({
+    credentials: true,
+  })
+);
 
 app.use("/auth", authRouter);
 
