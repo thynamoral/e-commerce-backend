@@ -340,3 +340,12 @@ export default {
   resetPassword,
   refreshToken,
 };
+
+export const logout = async (user_id: string) => {
+  // delete all user's sessions
+  const { rowCount } = await db.query<Session>(
+    "DELETE FROM sessions WHERE user_id = $1",
+    [user_id]
+  );
+  assertAppError(rowCount! > 0, "Failed to logout", INTERNAL_SERVER_ERROR);
+};

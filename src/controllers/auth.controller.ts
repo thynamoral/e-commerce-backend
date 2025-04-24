@@ -6,7 +6,7 @@ import {
   resetPasswordSchema,
 } from "../validation-schema/auth.schema";
 import asyncRequestHandler from "../utils/asyncRequestHandler";
-import authService from "../services/auth.service";
+import authService, { logout } from "../services/auth.service";
 import { BAD_REQUEST, CREATED, OK, UNAUTHORIZED } from "../utils/httpStatus";
 import {
   ACESS_TOKEN_COOKIE_NAME,
@@ -95,6 +95,7 @@ export const refreshTokenHandler = asyncRequestHandler(async (req, res) => {
 export const logoutHandler = asyncRequestHandler(async (req, res) => {
   // clear cookies
   clearAuthCookies(res);
+  await logout(req.user_id!);
   // response
   res.status(OK).json({ message: "Logged out successfully" });
 });
