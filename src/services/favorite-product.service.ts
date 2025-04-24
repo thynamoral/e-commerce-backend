@@ -1,7 +1,7 @@
 import db from "../configs/db.config";
 import { FavoriteProduct } from "../entities/FavoriteProduct.entity";
 import { assertAppError } from "../utils/assertAppError";
-import { INTERNAL_SERVER_ERROR } from "../utils/httpStatus";
+import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "../utils/httpStatus";
 
 type FavoriteProductParams = (
   user_id: string,
@@ -42,4 +42,20 @@ export const deleteFavoriteProduct: FavoriteProductParams = async (
     "Failed to delete favorite product",
     INTERNAL_SERVER_ERROR
   );
+};
+
+export const getUserFavoriteProducts = async (user_id: string) => {
+  // find favorite products by user_id
+  const { rows: favoriteProducts } = await db.query<FavoriteProduct>(
+    `
+    SELECT products.product_id, products.product_name, products.price, products.slug AS product_slug,
+    categories.category_id, categories.category_name, categories.slug AS category_slug
+    FROM favorite_products
+    INNER JOIN products ON favorite_products.product_id = products.product_id
+    INNER JOIN categories ON products.category_id = categories.category_id
+    WHERE favorite_products.user_id = $1
+    `,
+    [user_id]
+  );
+  return favoriteProducts;
 };
