@@ -3,11 +3,14 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { PORT } from "./configs/env.config";
 import errorHandlder from "./utils/errorHandler";
-import authRouter from "./routers/auth.router";
 import { connectDB } from "./configs/db.config";
 import cors from "cors";
+import authenticate from "./middlewares/authenticate";
+import authorize from "./middlewares/authorize";
+import authRouter from "./routers/auth.router";
 import userRouter from "./routers/user.router";
 import productRouter from "./routers/product.router";
+import categoryRouter from "./routers/category.router";
 
 const app = express();
 
@@ -23,6 +26,7 @@ app.use(
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
 app.use("/products", productRouter);
+app.use("/categories", authenticate, authorize(["admin"]), categoryRouter);
 
 app.use(errorHandlder);
 
