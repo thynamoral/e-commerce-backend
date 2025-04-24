@@ -1,5 +1,6 @@
 import {
   createCategory,
+  deleteCategory,
   getCategories,
   getCurrentCategory,
   updateCategory,
@@ -49,6 +50,11 @@ export const updateCategoryHandler = asyncRequestHandler(async (req, res) => {
   res.status(OK).json({ message: "Category updated successfully" });
 });
 
-// export const deleteCategoryHandler = asyncRequestHandler(
-//   async (req, res) => {}
-// );
+export const deleteCategoryHandler = asyncRequestHandler(async (req, res) => {
+  // get params and validate id
+  const id = categoryIdSchema.parse(req.params.id);
+  // call service
+  await deleteCategory(id);
+  // response
+  res.status(OK).json({ message: "Category deleted successfully" });
+});

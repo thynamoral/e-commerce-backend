@@ -92,3 +92,29 @@ export const updateCategory = async (
   );
   return updatedCategory;
 };
+
+export const deleteCategory = async (id: string) => {
+  // find category by id
+  const {
+    rows: [existedCategory],
+  } = await db.query<Category>(
+    `
+      SELECT * FROM categories WHERE category_id = $1
+    `,
+    [id]
+  );
+  assertAppError(existedCategory, "Category not found", NOT_FOUND);
+
+  // delete category
+  const { rowCount } = await db.query(
+    `
+      DELETE FROM categories WHERE category_id = $1
+    `,
+    [id]
+  );
+  assertAppError(
+    rowCount === 1,
+    "Failed to delete category",
+    INTERNAL_SERVER_ERROR
+  );
+};
