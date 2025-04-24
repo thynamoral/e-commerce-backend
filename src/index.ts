@@ -7,6 +7,7 @@ import authRouter from "./routers/auth.router";
 import { connectDB } from "./configs/db.config";
 import cors from "cors";
 import userRouter from "./routers/user.router";
+import productRouter from "./routers/product.router";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(
 
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
+app.use("/products", productRouter);
 
 app.use(errorHandlder);
 
