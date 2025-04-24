@@ -12,6 +12,7 @@ import userRouter from "./routers/user.router";
 import productRouter from "./routers/product.router";
 import categoryRouter from "./routers/category.router";
 import favoriteProductRouter from "./routers/favorite-product.router";
+import productInventoryRouter from "./routers/product-inventory.router";
 
 const app = express();
 
@@ -29,6 +30,12 @@ app.use("/user", userRouter);
 app.use("/products", productRouter);
 app.use("/categories", authenticate, authorize(["admin"]), categoryRouter);
 app.use("/favorite-products", authenticate, favoriteProductRouter);
+app.use(
+  "/product-inventories",
+  authenticate,
+  authorize(["admin"]),
+  productInventoryRouter
+);
 
 app.use(errorHandlder);
 
