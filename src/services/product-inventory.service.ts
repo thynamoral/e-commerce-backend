@@ -35,3 +35,15 @@ export const createProductInventory = async (
 
   return createdProductInventory;
 };
+
+export const getCurrentProductInventory = async (id: string) => {
+  // find product inventory by id
+  const {
+    rows: [productInventory],
+  } = await db.query<ProductInventory>(
+    "SELECT * FROM product_inventories WHERE product_inventories.product_id = $1",
+    [id]
+  );
+  assertAppError(productInventory, "Product inventory not found", NOT_FOUND);
+  return productInventory;
+};

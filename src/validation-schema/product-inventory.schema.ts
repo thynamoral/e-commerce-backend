@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const productInventoryIdSchema = z.string().uuid();
+
 export const createProductInventorySchema = z.object({
   product_id: z.string().uuid(),
   stock_quantity: z.number().default(0),
