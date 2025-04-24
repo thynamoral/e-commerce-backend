@@ -33,7 +33,7 @@ export const getProducts = async (
   search?: string,
   category?: string,
   page: number = 1,
-  limit: number = 20
+  limit: number = 6
 ) => {
   const offset = (page - 1) * limit;
   const conditions: string[] = [];
@@ -132,4 +132,30 @@ export const updateProduct = async (
     INTERNAL_SERVER_ERROR
   );
   return updatedProduct;
+};
+
+export const deleteProduct = async (id: string) => {
+  // find product by id
+  const {
+    rows: [existedProduct],
+  } = await db.query<Product>(
+    `
+      SELECT * FROM products WHERE product_id = $1
+    `,
+    [id]
+  );
+  assertAppError(existedProduct, "Product not found", BAD_REQUEST);
+
+  // delete product
+  const { rowCount } = await db.query(
+    `
+      DELETE FROM products WHERE product_id = $1
+    `,
+    [id]
+  );
+  assertAppError(
+    rowCount === 1,
+    "Failed to delete product",
+    INTERNAL_SERVER_ERROR
+  );
 };

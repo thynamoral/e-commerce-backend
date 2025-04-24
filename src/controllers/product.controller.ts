@@ -1,5 +1,6 @@
 import {
   createProduct,
+  deleteProduct,
   getCurrentProduct,
   getProducts,
   updateProduct,
@@ -56,4 +57,11 @@ export const updateProductHandler = asyncRequestHandler(async (req, res) => {
   res.status(OK).json({ message: "Product updated successfully" });
 });
 
-export const deleteProductHandler = asyncRequestHandler(async (req, res) => {});
+export const deleteProductHandler = asyncRequestHandler(async (req, res) => {
+  // get params and validate id
+  const { id } = productIdSchema.parse({ id: req.params.id });
+  // call service
+  await deleteProduct(id);
+  // response
+  res.status(OK).json({ message: "Product deleted successfully" });
+});
