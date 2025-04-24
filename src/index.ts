@@ -11,6 +11,7 @@ import authRouter from "./routers/auth.router";
 import userRouter from "./routers/user.router";
 import productRouter from "./routers/product.router";
 import categoryRouter from "./routers/category.router";
+import favoriteProductRouter from "./routers/favorite-product.router";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/auth", authRouter);
 app.use("/user", userRouter);
 app.use("/products", productRouter);
 app.use("/categories", authenticate, authorize(["admin"]), categoryRouter);
+app.use("/favorite-products", authenticate, favoriteProductRouter);
 
 app.use(errorHandlder);
 
