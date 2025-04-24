@@ -4,7 +4,7 @@ import { generateUniqueSlug } from "../utils/slug";
 import db from "../configs/db.config";
 import { Category } from "../entities/Category.entity";
 import { assertAppError } from "../utils/assertAppError";
-import { INTERNAL_SERVER_ERROR } from "../utils/httpStatus";
+import { INTERNAL_SERVER_ERROR, NOT_FOUND } from "../utils/httpStatus";
 
 export const createCategory = async (
   createCategoryPayload: z.infer<typeof createCategorySchema>
@@ -27,4 +27,12 @@ export const createCategory = async (
     "Failed to create category",
     INTERNAL_SERVER_ERROR
   );
+};
+
+export const getCategories = async () => {
+  const { rows: categories } = await db.query<Category>(
+    "SELECT * FROM categories ORDER BY createdat DESC"
+  );
+  assertAppError(categories.length > 0, "Categories not found", NOT_FOUND);
+  return categories;
 };
