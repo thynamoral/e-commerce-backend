@@ -75,3 +75,21 @@ export const getProducts = async (
   assertAppError(products.length > 0, "Products not found", BAD_REQUEST);
   return products;
 };
+
+export const getCurrentProduct = async (id: string) => {
+  const {
+    rows: [product],
+  } = await db.query<Product>(
+    `
+        SELECT 
+      products.product_id, products.product_name, products.price, products.slug AS product_slug,
+      categories.category_id, categories.category_name, categories.slug AS category_slug
+    FROM products
+    LEFT JOIN categories ON products.category_id = categories.category_id 
+    WHERE products.product_id = $1
+    `,
+    [id]
+  );
+  assertAppError(product, "Product not found", BAD_REQUEST);
+  return product;
+};
