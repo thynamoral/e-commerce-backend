@@ -7,3 +7,5 @@ export const createProductInventorySchema = z.object({
   stock_quantity: z.number().default(0),
   sold_out: z.number().default(0),
 });
+
+export const updateProductInventorySchema = createProductInventorySchema;

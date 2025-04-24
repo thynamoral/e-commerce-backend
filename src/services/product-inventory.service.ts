@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { createProductInventorySchema } from "../validation-schema/product-inventory.schema";
+import {
+  createProductInventorySchema,
+  updateProductInventorySchema,
+} from "../validation-schema/product-inventory.schema";
 import db from "../configs/db.config";
 import { Product } from "../entities/Product.entity";
 import { assertAppError } from "../utils/assertAppError";
@@ -46,4 +49,38 @@ export const getCurrentProductInventory = async (id: string) => {
   );
   assertAppError(productInventory, "Product inventory not found", NOT_FOUND);
   return productInventory;
+};
+
+export const updateProductInventory = async (
+  product_id: string,
+  updateProductInventoryPayload: z.infer<typeof updateProductInventorySchema>
+) => {
+  // find product inventory by id
+  const {
+    rows: [existedProductInventory],
+  } = await db.query<ProductInventory>(
+    "SELECT * FROM product_inventories WHERE product_id = $1",
+    [product_id]
+  );
+  assertAppError(
+    existedProductInventory,
+    "Product inventory not found",
+    NOT_FOUND
+  );
+
+  // update product inventory
+  const { stock_quantity, sold_out } = updateProductInventoryPayload;
+  const {
+    rows: [updatedProductInventory],
+    rowCount: updatedProductInventoryCount,
+  } = await db.query<ProductInventory>(
+    "UPDATE product_inventories SET stock_quantity = $1, sold_out = $2 WHERE product_id = $3",
+    [stock_quantity, sold_out, product_id]
+  );
+  assertAppError(
+    updatedProductInventoryCount === 1,
+    "Failed to update product inventory",
+    INTERNAL_SERVER_ERROR
+  );
+  return updatedProductInventory;
 };

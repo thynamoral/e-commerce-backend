@@ -1,12 +1,14 @@
 import {
   createProductInventory,
   getCurrentProductInventory,
+  updateProductInventory,
 } from "../services/product-inventory.service";
 import asyncRequestHandler from "../utils/asyncRequestHandler";
 import { CREATED, OK } from "../utils/httpStatus";
 import {
   createProductInventorySchema,
   productInventoryIdSchema,
+  updateProductInventorySchema,
 } from "../validation-schema/product-inventory.schema";
 
 export const createProductInventoryHandler = asyncRequestHandler(
@@ -32,5 +34,20 @@ export const getCurrentProductInventoryHandler = asyncRequestHandler(
     const productInventory = await getCurrentProductInventory(id);
     // response
     res.status(OK).json(productInventory);
+  }
+);
+
+export const updateProductInventoryHandler = asyncRequestHandler(
+  async (req, res) => {
+    // get params and validate id
+    const id = req.params.id;
+    const updateProductInventoryPayload = updateProductInventorySchema.parse({
+      ...req.body,
+      product_id: id,
+    });
+    // call service
+    await updateProductInventory(id, updateProductInventoryPayload);
+    // response
+    res.status(OK).json({ message: "Product inventory updated successfully" });
   }
 );
