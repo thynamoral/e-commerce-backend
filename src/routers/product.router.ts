@@ -6,13 +6,33 @@ import {
   getProductsHandler,
   updateProductHandler,
 } from "../controllers/product.controller";
+import authenticate from "../middlewares/authenticate";
+import authorize from "../middlewares/authorize";
 
 const productRouter = Router();
 
-productRouter.post("/", createProductHandler);
+// public routes
 productRouter.get("/", getProductsHandler);
 productRouter.get("/:id", getCurrentProductHandler);
-productRouter.put("/:id", updateProductHandler);
-productRouter.delete("/:id", deleteProductHandler);
+
+// protected routes
+productRouter.post(
+  "/",
+  authenticate,
+  authorize(["admin"]),
+  createProductHandler
+);
+productRouter.put(
+  "/:id",
+  authenticate,
+  authorize(["admin"]),
+  updateProductHandler
+);
+productRouter.delete(
+  "/:id",
+  authenticate,
+  authorize(["admin"]),
+  deleteProductHandler
+);
 
 export default productRouter;
