@@ -4,7 +4,7 @@ import {
   // deleteCategoryHandler,
   getCategoriesHandler,
   getCurrentCategoryHandler,
-  // updateCategoryHandler,
+  updateCategoryHandler,
 } from "../controllers/category.controller";
 
 const categoryRouter = Router();
@@ -13,7 +13,7 @@ const categoryRouter = Router();
 categoryRouter.post("/", createCategoryHandler);
 categoryRouter.get("/", getCategoriesHandler);
 categoryRouter.get("/:id", getCurrentCategoryHandler);
-// categoryRouter.put("/:id", updateCategoryHandler);
+categoryRouter.put("/:id", updateCategoryHandler);
 // categoryRouter.delete("/:id", deleteCategoryHandler);
 
 export default categoryRouter;

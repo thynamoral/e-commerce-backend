@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { createCategorySchema } from "../validation-schema/category.schema";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+} from "../validation-schema/category.schema";
 import { generateUniqueSlug } from "../utils/slug";
 import db from "../configs/db.config";
 import { Category } from "../entities/Category.entity";
@@ -37,7 +40,7 @@ export const getCategories = async () => {
   return categories;
 };
 
-export const getCurrentProduct = async (id: string) => {
+export const getCurrentCategory = async (id: string) => {
   const {
     rows: [product],
   } = await db.query<Category>(
@@ -49,4 +52,43 @@ export const getCurrentProduct = async (id: string) => {
   );
   assertAppError(product, "Product not found", NOT_FOUND);
   return product;
+};
+
+export const updateCategory = async (
+  id: string,
+  updateCategoryPayload: z.infer<typeof updateCategorySchema>
+) => {
+  // find category by id
+  const {
+    rows: [existedCategory],
+  } = await db.query<Category>(
+    `
+      SELECT * FROM categories WHERE category_id = $1
+    `,
+    [id]
+  );
+  assertAppError(existedCategory, "Category not found", NOT_FOUND);
+
+  // update category
+  const { category_name } = updateCategoryPayload;
+  const newCategorySlug = await generateUniqueSlug(category_name, "categories");
+  const {
+    rows: [updatedCategory],
+    rowCount,
+  } = await db.query<Category>(
+    `
+      UPDATE categories
+      SET category_name = $1,
+      slug = $2
+      WHERE category_id = $3
+      RETURNING *
+    `,
+    [category_name, newCategorySlug, id]
+  );
+  assertAppError(
+    rowCount === 1,
+    "Failed to update category",
+    INTERNAL_SERVER_ERROR
+  );
+  return updatedCategory;
 };

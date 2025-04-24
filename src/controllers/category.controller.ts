@@ -1,13 +1,15 @@
 import {
   createCategory,
   getCategories,
-  getCurrentProduct,
+  getCurrentCategory,
+  updateCategory,
 } from "../services/category.service";
 import asyncRequestHandler from "../utils/asyncRequestHandler";
 import { CREATED, OK } from "../utils/httpStatus";
 import {
   categoryIdSchema,
   createCategorySchema,
+  updateCategorySchema,
 } from "../validation-schema/category.schema";
 
 export const createCategoryHandler = asyncRequestHandler(async (req, res) => {
@@ -29,17 +31,23 @@ export const getCategoriesHandler = asyncRequestHandler(async (req, res) => {
 export const getCurrentCategoryHandler = asyncRequestHandler(
   async (req, res) => {
     // get params and validate id
-    const { id } = categoryIdSchema.parse({ id: req.params.id });
+    const id = categoryIdSchema.parse(req.params.id);
     // call service
-    const product = await getCurrentProduct(id);
+    const product = await getCurrentCategory(id);
     // response
     res.status(OK).json(product);
   }
 );
 
-// export const updateCategoryHandler = asyncRequestHandler(
-//   async (req, res) => {}
-// );
+export const updateCategoryHandler = asyncRequestHandler(async (req, res) => {
+  // get params and validate id
+  const id = categoryIdSchema.parse(req.params.id);
+  const updateProductPayload = updateCategorySchema.parse(req.body);
+  // call service
+  await updateCategory(id, updateProductPayload);
+  // response
+  res.status(OK).json({ message: "Category updated successfully" });
+});
 
 // export const deleteCategoryHandler = asyncRequestHandler(
 //   async (req, res) => {}
