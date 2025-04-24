@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { createProductSchema } from "../validation-schema/product.schema";
+import {
+  createProductSchema,
+  updateProductSchema,
+} from "../validation-schema/product.schema";
 import db from "../configs/db.config";
 import { GetProductsResponse, Product } from "../entities/Product.entity";
 import { assertAppError } from "../utils/assertAppError";
@@ -92,4 +95,41 @@ export const getCurrentProduct = async (id: string) => {
   );
   assertAppError(product, "Product not found", BAD_REQUEST);
   return product;
+};
+
+export const updateProduct = async (
+  id: string,
+  updateProductPayload: z.infer<typeof updateProductSchema>
+) => {
+  // find product by id
+  const {
+    rows: [existedProduct],
+  } = await db.query<Product>(
+    `
+      SELECT * FROM products WHERE product_id = $1
+    `,
+    [id]
+  );
+  assertAppError(existedProduct, "Product not found", BAD_REQUEST);
+
+  // update product
+  const { product_name, price, category_id } = updateProductPayload;
+  const {
+    rows: [updatedProduct],
+    rowCount,
+  } = await db.query<Product>(
+    `
+      UPDATE products
+      SET product_name = $1, price = $2, category_id = $3
+      WHERE product_id = $4
+      RETURNING *
+    `,
+    [product_name, price, category_id, id]
+  );
+  assertAppError(
+    rowCount === 1,
+    "Failed to update product",
+    INTERNAL_SERVER_ERROR
+  );
+  return updatedProduct;
 };

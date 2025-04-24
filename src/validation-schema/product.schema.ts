@@ -9,3 +9,5 @@ export const createProductSchema = z.object({
   price: z.number(),
   category_id: z.string().optional(),
 });
+
+export const updateProductSchema = createProductSchema;

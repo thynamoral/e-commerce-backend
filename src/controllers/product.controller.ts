@@ -2,12 +2,14 @@ import {
   createProduct,
   getCurrentProduct,
   getProducts,
+  updateProduct,
 } from "../services/product.service";
 import asyncRequestHandler from "../utils/asyncRequestHandler";
 import { CREATED, OK } from "../utils/httpStatus";
 import {
   createProductSchema,
   productIdSchema,
+  updateProductSchema,
 } from "../validation-schema/product.schema";
 
 export const createProductHandler = asyncRequestHandler(async (req, res) => {
@@ -35,7 +37,7 @@ export const getProductsHandler = asyncRequestHandler(async (req, res) => {
 
 export const getCurrentProductHandler = asyncRequestHandler(
   async (req, res) => {
-    // get params
+    // get params and validate id
     const { id } = productIdSchema.parse({ id: req.params.id });
     // call service
     const product = await getCurrentProduct(id);
@@ -43,3 +45,15 @@ export const getCurrentProductHandler = asyncRequestHandler(
     res.status(OK).json(product);
   }
 );
+
+export const updateProductHandler = asyncRequestHandler(async (req, res) => {
+  // get params and validate id
+  const { id } = productIdSchema.parse({ id: req.params.id });
+  const updateProductPayload = updateProductSchema.parse(req.body);
+  // call service
+  await updateProduct(id, updateProductPayload);
+  // response
+  res.status(OK).json({ message: "Product updated successfully" });
+});
+
+export const deleteProductHandler = asyncRequestHandler(async (req, res) => {});
