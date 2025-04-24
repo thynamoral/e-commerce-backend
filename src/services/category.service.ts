@@ -36,3 +36,17 @@ export const getCategories = async () => {
   assertAppError(categories.length > 0, "Categories not found", NOT_FOUND);
   return categories;
 };
+
+export const getCurrentProduct = async (id: string) => {
+  const {
+    rows: [product],
+  } = await db.query<Category>(
+    `
+    SELECT * FROM categories
+    WHERE categories.category_id = $1
+    `,
+    [id]
+  );
+  assertAppError(product, "Product not found", NOT_FOUND);
+  return product;
+};

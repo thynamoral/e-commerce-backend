@@ -3,7 +3,7 @@ import {
   createCategoryHandler,
   // deleteCategoryHandler,
   getCategoriesHandler,
-  // getCurrentCategoryHandler,
+  getCurrentCategoryHandler,
   // updateCategoryHandler,
 } from "../controllers/category.controller";
 
@@ -12,7 +12,7 @@ const categoryRouter = Router();
 // protected routes
 categoryRouter.post("/", createCategoryHandler);
 categoryRouter.get("/", getCategoriesHandler);
-// categoryRouter.get("/:id", getCurrentCategoryHandler);
+categoryRouter.get("/:id", getCurrentCategoryHandler);
 // categoryRouter.put("/:id", updateCategoryHandler);
 // categoryRouter.delete("/:id", deleteCategoryHandler);
 
