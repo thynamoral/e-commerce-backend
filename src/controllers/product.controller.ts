@@ -16,8 +16,9 @@ import {
 export const createProductHandler = asyncRequestHandler(async (req, res) => {
   // validation body
   const createProductPayload = createProductSchema.parse(req.body);
+  const files = req.files as Express.Multer.File[];
   // call service
-  await createProduct(createProductPayload);
+  await createProduct(createProductPayload, files);
   // response
   res.status(CREATED).json({ message: "Product created successfully" });
 });

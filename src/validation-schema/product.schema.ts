@@ -6,7 +6,7 @@ export const productIdSchema = z.object({
 
 export const createProductSchema = z.object({
   product_name: z.string().min(1).max(255),
-  price: z.number(),
+  price: z.string(),
   category_id: z.string().optional(),
 });
 

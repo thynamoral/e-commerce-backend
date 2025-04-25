@@ -8,24 +8,70 @@ import { GetProductsResponse, Product } from "../entities/Product.entity";
 import { assertAppError } from "../utils/assertAppError";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "../utils/httpStatus";
 import { generateUniqueSlug } from "../utils/slug";
+import { uploadToCloudinary } from "../utils/cloudinaryUpload";
 
 export const createProduct = async (
-  createProductPayload: z.infer<typeof createProductSchema>
+  createProductPayload: z.infer<typeof createProductSchema>,
+  images?: Express.Multer.File[]
 ) => {
   const { product_name, price, category_id } = createProductPayload;
   const productSlug = await generateUniqueSlug(product_name, "products");
+
+  // create product
   const {
     rows: [createdProduct],
     rowCount,
   } = await db.query<Product>(
     "INSERT INTO products (product_name, price, slug, category_id) VALUES ($1, $2, $3, $4) RETURNING *",
-    [product_name, price, productSlug, category_id]
+    [product_name, Number(price), productSlug, category_id]
   );
   assertAppError(
     rowCount === 1,
     "Failed to create product",
     INTERNAL_SERVER_ERROR
   );
+
+  // upload images
+  const image_urls: string[] = [];
+  if (images) {
+    await Promise.all(
+      images.map(async (image) => {
+        // image validation
+        if (!image.mimetype.startsWith("image/")) {
+          assertAppError(false, "Only image files are allowed!", BAD_REQUEST);
+        }
+
+        if (image.size > 5 * 1024 * 1024) {
+          assertAppError(
+            false,
+            "Image size should be less than 5MB",
+            BAD_REQUEST
+          );
+        }
+
+        // upload image to cloudinary
+        const result = await uploadToCloudinary(
+          image.buffer,
+          image.originalname
+        );
+        image_urls.push(result.secure_url);
+
+        // save image url to database
+        const { rowCount: savedImageUrl } = await db.query(
+          "INSERT INTO product_images (product_id, image_url) VALUES ($1, $2) RETURNING *",
+          [createdProduct.product_id, result.secure_url]
+        );
+        assertAppError(
+          savedImageUrl === 1,
+          "Failed to save image url to database",
+          INTERNAL_SERVER_ERROR
+        );
+      })
+    );
+    console.log(`Upload images to cloudinary successfully`);
+    console.log(image_urls);
+  }
+
   return createdProduct;
 };
 
