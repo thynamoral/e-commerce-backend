@@ -52,8 +52,9 @@ export const updateProductHandler = asyncRequestHandler(async (req, res) => {
   // get params and validate id
   const { id } = productIdSchema.parse({ id: req.params.id });
   const updateProductPayload = updateProductSchema.parse(req.body);
+  const files = req.files as Express.Multer.File[];
   // call service
-  await updateProduct(id, updateProductPayload);
+  await updateProduct(id, updateProductPayload, files);
   // response
   res.status(OK).json({ message: "Product updated successfully" });
 });

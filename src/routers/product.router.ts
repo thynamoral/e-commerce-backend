@@ -28,6 +28,7 @@ productRouter.put(
   "/:id",
   authenticate,
   authorize(["admin"]),
+  upload.array("images", 5),
   updateProductHandler
 );
 productRouter.delete(

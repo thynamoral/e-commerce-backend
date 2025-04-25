@@ -1,5 +1,6 @@
 import db from "../configs/db.config";
 import { FavoriteProduct } from "../entities/FavoriteProduct.entity";
+import { ProductImage } from "../entities/ProductImage.entity";
 import { assertAppError } from "../utils/assertAppError";
 import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "../utils/httpStatus";
 
@@ -57,5 +58,32 @@ export const getUserFavoriteProducts = async (user_id: string) => {
     `,
     [user_id]
   );
-  return favoriteProducts;
+
+  // get product images
+  const favoriteProductsWithImages = await Promise.all(
+    favoriteProducts.map(async (product) => {
+      try {
+        const { rows: productImage } = await db.query<ProductImage>(
+          "SELECT * FROM product_images WHERE product_id = $1",
+          [product.product_id]
+        );
+
+        return {
+          ...product,
+          image_urls: productImage.map((image) => ({
+            product_image_id: image.product_image_id,
+            image_url: image.image_url,
+          })),
+        };
+      } catch (error) {
+        assertAppError(
+          false,
+          "Failed to get product's images",
+          INTERNAL_SERVER_ERROR
+        );
+      }
+    })
+  );
+
+  return favoriteProductsWithImages;
 };

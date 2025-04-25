@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { string, z } from "zod";
 
 export const productIdSchema = z.object({
   id: z.string().uuid(),
@@ -10,4 +10,6 @@ export const createProductSchema = z.object({
   category_id: z.string().optional(),
 });
 
-export const updateProductSchema = createProductSchema;
+export const updateProductSchema = createProductSchema.extend({
+  delete_image_ids: string().optional(),
+});
