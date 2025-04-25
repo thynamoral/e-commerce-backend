@@ -16,4 +16,5 @@ export type GetProductsResponse = {
   category_id: string;
   category_name: string;
   category_slug: string;
+  image_urls: string[];
 };

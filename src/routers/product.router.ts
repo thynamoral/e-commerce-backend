@@ -8,6 +8,7 @@ import {
 } from "../controllers/product.controller";
 import authenticate from "../middlewares/authenticate";
 import authorize from "../middlewares/authorize";
+import upload from "../middlewares/multer";
 
 const productRouter = Router();
 
@@ -20,12 +21,14 @@ productRouter.post(
   "/",
   authenticate,
   authorize(["admin"]),
+  upload.array("images", 5),
   createProductHandler
 );
 productRouter.put(
   "/:id",
   authenticate,
   authorize(["admin"]),
+  upload.array("images", 5),
   updateProductHandler
 );
 productRouter.delete(
