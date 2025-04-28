@@ -28,7 +28,7 @@ app.use(
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
 app.use("/products", productRouter);
-app.use("/categories", authenticate, authorize(["admin"]), categoryRouter);
+app.use("/categories", categoryRouter);
 app.use("/favorite-products", authenticate, favoriteProductRouter);
 app.use(
   "/product-inventories",
