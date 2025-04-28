@@ -25,16 +25,27 @@ export const createProductHandler = asyncRequestHandler(async (req, res) => {
 
 type GetProductsQuery = {
   search?: string;
-  category?: string;
+  category?: string | string[];
 };
 
 export const getProductsHandler = asyncRequestHandler(async (req, res) => {
   // get query params
   const { search, category } = req.query as GetProductsQuery;
+  let categories: string[] | undefined;
+
+  if (typeof category === "string") {
+    categories = [category];
+  } else if (Array.isArray(category)) {
+    categories = category;
+  }
   // call service
-  const products = await getProducts(search, category);
+  const products = await getProducts(search, categories);
   // response
-  res.status(OK).json(products);
+  res
+    .status(OK)
+    .json(
+      products.map((product) => ({ ...product, price: Number(product.price) }))
+    );
 });
 
 export const getCurrentProductHandler = asyncRequestHandler(

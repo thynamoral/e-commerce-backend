@@ -84,7 +84,7 @@ export const createProduct = async (
 
 export const getProducts = async (
   search?: string,
-  category?: string,
+  categories?: string[],
   page: number = 1,
   limit: number = 6
 ) => {
@@ -106,9 +106,10 @@ export const getProducts = async (
   }
 
   // category slug filter
-  if (category) {
-    conditions.push(`categories.slug = $${index++}`);
-    values.push(category);
+  if (categories && categories.length > 0) {
+    const placeholders = categories.map(() => `$${index++}`).join(", ");
+    conditions.push(`categories.slug IN (${placeholders})`);
+    values.push(...categories);
   }
 
   const whereClause =
