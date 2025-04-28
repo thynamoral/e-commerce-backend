@@ -55,7 +55,7 @@ export const getCurrentProductHandler = asyncRequestHandler(
     // call service
     const product = await getCurrentProduct(id);
     // response
-    res.status(OK).json(product);
+    res.status(OK).json({ ...product, price: Number(product.price) });
   }
 );
 

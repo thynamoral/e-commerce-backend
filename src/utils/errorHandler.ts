@@ -4,6 +4,13 @@ import AppError from "./appError";
 import { ZodError } from "zod";
 
 const zodErrorHandler = (error: ZodError, res: Response) => {
+  const isInvalid_uuid = error.issues.some(
+    (issue) => issue.message === "Invalid uuid"
+  );
+  if (isInvalid_uuid) {
+    res.status(BAD_REQUEST).json({ message: "Invalid uuid" });
+  }
+
   const errors = error.issues.map((issue) => ({
     path: issue.path.join("."),
     message: issue.message,
