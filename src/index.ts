@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
-import { PORT } from "./configs/env.config";
+import { FRONTEND_URL, PORT } from "./configs/env.config";
 import errorHandlder from "./utils/errorHandler";
 import { connectDB } from "./configs/db.config";
 import cors from "cors";
@@ -21,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
+    origin: [FRONTEND_URL],
     credentials: true,
   })
 );
