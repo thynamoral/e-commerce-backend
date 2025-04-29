@@ -17,6 +17,7 @@ import {
   setAuthCookies,
 } from "../utils/cookie";
 import { assertAppError } from "../utils/assertAppError";
+import { verificationCodeIdSchema } from "../validation-schema/verification-code.schema";
 
 export const registerAccountHandler = asyncRequestHandler(async (req, res) => {
   // validation body
@@ -48,8 +49,9 @@ export const emailVerifyHandler = asyncRequestHandler(async (req, res) => {
   // validation query
   const { code } = req.query as { code: string | undefined };
   assertAppError(code, "Invalid verification code", BAD_REQUEST);
+  const parsedCode = verificationCodeIdSchema.parse(code);
   // call service
-  await authService.verifyEmail(code);
+  await authService.verifyEmail(parsedCode);
   // response
   res.status(OK).json({ message: "Email verified successfully" });
 });
