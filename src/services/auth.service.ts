@@ -283,15 +283,9 @@ const resetPassword = async (resetPasswordPayload: ResetPasswordParams) => {
   );
 
   // delete all user's sessions
-  const { rowCount: deletedSessions } = await db.query<Session>(
-    "DELETE FROM sessions WHERE user_id = $1",
-    [existedVerificationCode[0].user_id]
-  );
-  assertAppError(
-    deletedSessions! > 0,
-    "Failed to reset password",
-    INTERNAL_SERVER_ERROR
-  );
+  await db.query<Session>("DELETE FROM sessions WHERE user_id = $1", [
+    existedVerificationCode[0].user_id,
+  ]);
 };
 
 const refreshToken = async (refreshToken: string) => {
