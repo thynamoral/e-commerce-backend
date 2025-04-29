@@ -7,14 +7,8 @@ import { AppErrorCode } from "../utils/appError";
 const authenticate: RequestHandler = (req, res, next) => {
   // check if accessToken is exists in cookies
   const accessToken = req.cookies.accessToken as string | undefined;
-  assertAppError(
-    accessToken,
-    "Unauthorized, Access token is required",
-    UNAUTHORIZED
-  );
-
   // verify accessToken
-  const { decodedPayload, error } = verifyToken(accessToken);
+  const { decodedPayload, error } = verifyToken(accessToken || "");
   assertAppError(
     decodedPayload,
     `${error === "jwt expired" ? "Session expired" : "Invalid accessToken"}`,
