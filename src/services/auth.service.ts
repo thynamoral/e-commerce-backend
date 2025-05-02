@@ -341,5 +341,4 @@ export const logout = async (user_id: string) => {
     "DELETE FROM sessions WHERE user_id = $1",
     [user_id]
   );
-  assertAppError(rowCount! > 0, "Failed to logout", INTERNAL_SERVER_ERROR);
 };
