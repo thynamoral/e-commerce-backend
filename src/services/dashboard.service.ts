@@ -1,22 +1,42 @@
+import { Dashboard } from "../entities/Dashboard.entity";
+
 export const getDashboardList = () => {
-  return [
+  const dashboardList: Dashboard[] = [
     {
-      title: "Main Menu",
-      url: "/dashboard",
+      title: "Dashboard",
       items: [
         {
-          title: "Dashboard",
+          title: "Dashboard overview",
           url: "/dashboard/overview",
         },
+      ],
+    },
+    {
+      title: "Products",
+      items: [
         {
-          title: "Products",
-          url: "/dashboard/products",
+          title: "Products list",
+          url: "/dashboard/products-list",
         },
         {
-          title: "Orders",
-          url: "/dashboard/orders",
+          title: "Add product",
+          url: "/dashboard/add-product",
+        },
+      ],
+    },
+    {
+      title: "Orders",
+      items: [
+        {
+          title: "Orders list",
+          url: "/dashboard/orders-list",
+        },
+        {
+          title: "Add order",
+          url: "/dashboard/add-order",
         },
       ],
     },
   ];
+  return dashboardList;
 };
