@@ -13,6 +13,7 @@ import productRouter from "./routers/product.router";
 import categoryRouter from "./routers/category.router";
 import favoriteProductRouter from "./routers/favorite-product.router";
 import productInventoryRouter from "./routers/product-inventory.router";
+import dashboardRouter from "./routers/dashboard.router";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use(
   authorize(["admin"]),
   productInventoryRouter
 );
+app.use("/dashboard", authenticate, authorize(["admin"]), dashboardRouter);
 
 app.use(errorHandlder);
 
