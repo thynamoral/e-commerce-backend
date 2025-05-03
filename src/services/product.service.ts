@@ -16,12 +16,14 @@ import {
 import { ProductImage } from "../entities/ProductImage.entity";
 import { PRODUCT_IMAGE_FOLDER } from "../configs/env.config";
 import cloudinary from "../configs/cloudinary.config";
+import { createProductInventory } from "./product-inventory.service";
 
 export const createProduct = async (
   createProductPayload: z.infer<typeof createProductSchema>,
   images?: Express.Multer.File[]
 ) => {
-  const { product_name, price, category_id } = createProductPayload;
+  const { product_name, price, category_id, stock_quantity } =
+    createProductPayload;
   const productSlug = await generateUniqueSlug(product_name, "products");
 
   // create product
@@ -37,6 +39,13 @@ export const createProduct = async (
     "Failed to create product",
     INTERNAL_SERVER_ERROR
   );
+
+  // add stock quantity
+  await createProductInventory({
+    product_id: createdProduct.product_id,
+    stock_quantity: Number(stock_quantity),
+    sold_out: 0,
+  });
 
   // upload images
   const image_urls: string[] = [];
@@ -162,8 +171,10 @@ export const getCurrentProduct = async (id: string) => {
     `
         SELECT 
       products.product_id, products.product_name, products.price, products.slug AS product_slug,
-      categories.category_id, categories.category_name, categories.slug AS category_slug
+      categories.category_id, categories.category_name, categories.slug AS category_slug,
+      product_inventories.stock_quantity
     FROM products
+    INNER JOIN product_inventories ON products.product_id = product_inventories.product_id
     LEFT JOIN categories ON products.category_id = categories.category_id 
     WHERE products.product_id = $1
     `,

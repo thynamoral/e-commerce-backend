@@ -8,6 +8,7 @@ export const createProductSchema = z.object({
   product_name: z.string().min(1).max(255),
   price: z.string(),
   category_id: z.string().optional(),
+  stock_quantity: z.string(),
 });
 
 export const updateProductSchema = createProductSchema.extend({

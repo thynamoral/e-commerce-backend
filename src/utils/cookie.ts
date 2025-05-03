@@ -8,8 +8,8 @@ export const REFRESH_TOKEN_COOKIE_PATH = "/auth/token/refresh";
 
 export const defaultCookieOptions: CookieOptions = {
   httpOnly: true,
-  secure: NODE_ENV === "production",
   sameSite: "strict",
+  secure: NODE_ENV === "production",
 };
 
 export const getAcessTokenCookieOptions = (): CookieOptions => ({

@@ -1,7 +1,7 @@
 import { ErrorRequestHandler, Response } from "express";
-import { BAD_REQUEST, INTERNAL_SERVER_ERROR } from "./httpStatus";
-import AppError from "./appError";
 import { ZodError } from "zod";
+import AppError from "./appError";
+import { BAD_REQUEST } from "./httpStatus";
 
 const zodErrorHandler = (error: ZodError, res: Response) => {
   const isInvalid_uuid = error.issues.some(

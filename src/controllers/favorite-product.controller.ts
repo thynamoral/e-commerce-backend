@@ -46,6 +46,13 @@ export const getUserFavoriteProductsHandler = asyncRequestHandler(
     // call service
     const favoriteProducts = await getUserFavoriteProducts(user_id);
     // response
-    res.status(OK).json(favoriteProducts);
+    res
+      .status(OK)
+      .json(
+        favoriteProducts.map((product) => ({
+          ...product,
+          price: Number(product.price),
+        }))
+      );
   }
 );

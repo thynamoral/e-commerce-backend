@@ -10,8 +10,7 @@ type ResendParams = {
   text: string;
 };
 
-export const getEmailFrom = () =>
-  NODE_ENV === "production" ? EMAIL_SENDER : "onboarding@resend.dev";
+export const getEmailFrom = () => "onboarding@resend.dev";
 
 export const getEmailTo = (to: string) =>
   NODE_ENV === "production" ? to : "delivered@resend.dev";

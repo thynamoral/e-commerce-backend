@@ -4,6 +4,7 @@ export type Product = {
   price: number;
   category_id: string;
   slug: string;
+  stock_quantity: number;
   createdat: Date;
   updatedat: Date;
 };
