@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { getDashboardHandler } from "../controllers/dashboard.controller";
+import {
+  getDashboardHandler,
+  getProductsListHandler,
+} from "../controllers/dashboard.controller";
 
 const dashboardRouter = Router();
 
 dashboardRouter.get("/", getDashboardHandler);
+dashboardRouter.get("/products", getProductsListHandler);
 
 export default dashboardRouter;
