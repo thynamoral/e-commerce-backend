@@ -12,6 +12,7 @@ export const PORT = getENV("PORT");
 export const DATABASE_URL = getENV("DATABASE_URL");
 export const SALT_ROUND = getENV("SALT_ROUND");
 export const FRONTEND_URL = getENV("FRONTEND_URL");
+export const FRONTEND_URL_PRODUCTION = getENV("FRONTEND_URL_PRODUCTION");
 export const EMAIL_SENDER = getENV("EMAIL_SENDER");
 export const RESEND_API_KEY = getENV("RESEND_API_KEY");
 export const JWT_ACESS_SECRET = getENV("JWT_ACESS_SECRET");
