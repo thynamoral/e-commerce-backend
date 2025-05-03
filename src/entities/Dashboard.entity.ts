@@ -23,3 +23,9 @@ type ProductImage = {
   product_image_id: string;
   image_url: string;
 };
+
+export type DashboardOverviewResponse = {
+  total_non_admin_users: number;
+  total_products: number;
+  total_categories: number;
+};

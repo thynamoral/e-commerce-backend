@@ -1,10 +1,28 @@
 import db from "../configs/db.config";
 import {
   Dashboard,
+  DashboardOverviewResponse,
   ProductsListForDashboardResponse,
 } from "../entities/Dashboard.entity";
 import { assertAppError } from "../utils/assertAppError";
 import { INTERNAL_SERVER_ERROR } from "../utils/httpStatus";
+
+export const getDashboardOverview = async () => {
+  const { rows: dashboardOverview } = await db.query<DashboardOverviewResponse>(
+    `
+    SELECT 
+      (SELECT COUNT(*) FROM users WHERE role != 'admin') AS total_non_admin_users,
+      (SELECT COUNT(*) FROM products) AS total_products,
+      (SELECT COUNT(*) FROM categories) AS total_categories
+    `
+  );
+  assertAppError(
+    dashboardOverview.length > 0,
+    "Dashboard overview not found",
+    INTERNAL_SERVER_ERROR
+  );
+  return dashboardOverview[0];
+};
 
 export const getDashboardList = () => {
   const dashboardList: Dashboard[] = [
@@ -27,6 +45,19 @@ export const getDashboardList = () => {
         {
           title: "Add product",
           url: "/dashboard/add-product",
+        },
+      ],
+    },
+    {
+      title: "Categories",
+      items: [
+        {
+          title: "Categories list",
+          url: "/dashboard/categories-list",
+        },
+        {
+          title: "Add category",
+          url: "/dashboard/add-category",
         },
       ],
     },
@@ -62,11 +93,6 @@ export const getProductsList = async () => {
     ORDER BY products.createdat DESC
     `
   );
-  assertAppError(
-    products.length > 0,
-    "Failed to get products list for dashboard",
-    INTERNAL_SERVER_ERROR
-  );
 
   // group product images by product_id
   const productImagesGroupedByProductId = Object.values(
@@ -76,7 +102,7 @@ export const getProductsList = async () => {
           acc[product.product_id] = {
             product_id: product.product_id,
             product_name: product.product_name,
-            price: product.price,
+            price: Number(product.price),
             product_slug: product.product_slug,
             category_id: product.category_id,
             category_name: product.category_name,

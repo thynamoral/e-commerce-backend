@@ -1,5 +1,6 @@
 import {
   getDashboardList,
+  getDashboardOverview,
   getProductsList,
 } from "../services/dashboard.service";
 import asyncRequestHandler from "../utils/asyncRequestHandler";
@@ -18,3 +19,12 @@ export const getProductsListHandler = asyncRequestHandler(async (req, res) => {
   // response
   res.status(OK).json(products);
 });
+
+export const getDashboardOverviewHandler = asyncRequestHandler(
+  async (req, res) => {
+    // call service
+    const dashboardOverview = await getDashboardOverview();
+    // response
+    res.status(OK).json(dashboardOverview);
+  }
+);

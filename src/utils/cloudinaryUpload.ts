@@ -13,7 +13,16 @@ export const uploadToCloudinary = async (
       {
         folder: PRODUCT_IMAGE_FOLDER,
         public_id: fileName,
-        transformation: [{ fetch_format: "auto", quality: "auto" }],
+        transformation: [
+          {
+            width: 1000,
+            height: 1000,
+            crop: "fill",
+            gravity: "auto",
+            fetch_format: "auto",
+            quality: "auto",
+          },
+        ],
       },
       (error, result) => {
         if (error) reject(error);
