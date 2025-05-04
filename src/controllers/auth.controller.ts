@@ -36,11 +36,9 @@ export const loginHandler = asyncRequestHandler(async (req, res) => {
   // call service
   const { user, accessToken, refreshToken } =
     await authService.login(loginPayload);
-  // set cookies
-  setAuthCookies(res, accessToken, refreshToken);
   // response
   const { password, createdat, updatedat, ...userWithoutPassword } = user;
-  res
+  return setAuthCookies(res, accessToken, refreshToken)
     .status(OK)
     .json({ user: userWithoutPassword, message: "Logged in successfully" });
 });
@@ -95,9 +93,9 @@ export const refreshTokenHandler = asyncRequestHandler(async (req, res) => {
 });
 
 export const logoutHandler = asyncRequestHandler(async (req, res) => {
-  // clear cookies
-  clearAuthCookies(res);
   await logout(req.user_id!);
   // response
-  res.status(OK).json({ message: "Logged out successfully" });
+  return clearAuthCookies(res)
+    .status(OK)
+    .json({ message: "Logged out successfully" });
 });

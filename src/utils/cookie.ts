@@ -7,9 +7,9 @@ export const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 export const REFRESH_TOKEN_COOKIE_PATH = "/auth/token/refresh";
 
 export const defaultCookieOptions: CookieOptions = {
-  httpOnly: true,
   sameSite: "strict",
-  secure: NODE_ENV === "production",
+  httpOnly: true,
+  secure: NODE_ENV !== "development",
 };
 
 export const getAcessTokenCookieOptions = (): CookieOptions => ({
@@ -28,7 +28,7 @@ export const setAuthCookies = (
   accessToken: string,
   refreshToken: string
 ) => {
-  res
+  return res
     .cookie(ACESS_TOKEN_COOKIE_NAME, accessToken, getAcessTokenCookieOptions())
     .cookie(
       REFRESH_TOKEN_COOKIE_NAME,
@@ -38,8 +38,9 @@ export const setAuthCookies = (
 };
 
 export const clearAuthCookies = (res: Response) => {
-  res.clearCookie(ACESS_TOKEN_COOKIE_NAME);
-  res.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
-    path: REFRESH_TOKEN_COOKIE_PATH,
-  });
+  return res
+    .clearCookie(ACESS_TOKEN_COOKIE_NAME)
+    .clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
+      path: REFRESH_TOKEN_COOKIE_PATH,
+    });
 };
