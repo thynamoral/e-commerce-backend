@@ -224,15 +224,10 @@ const forgotPassword = async (forgotPasswordPayload: ForgotPasswordParams) => {
   // send email verification
   const expiredMs = convertToMs(createdVerificationCode[0].expiredat);
   const url = `${NODE_ENV === "development" ? FRONTEND_URL : FRONTEND_URL_PRODUCTION}/password/reset?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
-  const { error } = await sendEmail({
-    to: existedUser[0].email,
+  await sendEmail({
+    to: forgotPasswordPayload.email,
     ...getPasswordResetTemplate(url),
   });
-  assertAppError(
-    !error,
-    "Failed to request password reset, Internal Server Error",
-    INTERNAL_SERVER_ERROR
-  );
 };
 
 type ResetPasswordParams = {
