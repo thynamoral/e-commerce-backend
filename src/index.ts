@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import {
   FRONTEND_URL,
   FRONTEND_URL_PRODUCTION,
+  NODE_ENV,
   PORT,
 } from "./configs/env.config";
 import errorHandlder from "./utils/errorHandler";
@@ -26,10 +27,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: [FRONTEND_URL, FRONTEND_URL_PRODUCTION],
+    origin: NODE_ENV === "development" ? FRONTEND_URL : FRONTEND_URL_PRODUCTION,
     credentials: true,
   })
 );
+app.options("*", cors());
 
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
