@@ -196,11 +196,7 @@ const forgotPassword = async (forgotPasswordPayload: ForgotPasswordParams) => {
     "SELECT * FROM users WHERE email = $1",
     [forgotPasswordPayload.email]
   );
-  assertAppError(
-    existedUser.length > 0,
-    "Invalid email or password",
-    BAD_REQUEST
-  );
+  assertAppError(existedUser.length > 0, "Invalid", BAD_REQUEST);
 
   // rate limit to only 2 requests in last 10 minutes
   const { rows: existedVerificationCode, rowCount } =
@@ -227,7 +223,7 @@ const forgotPassword = async (forgotPasswordPayload: ForgotPasswordParams) => {
 
   // send email verification
   const expiredMs = convertToMs(createdVerificationCode[0].expiredat);
-  const url = `${FRONTEND_URL}/password/reset?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
+  const url = `${NODE_ENV === "development" ? FRONTEND_URL : FRONTEND_URL_PRODUCTION}/password/reset?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
   const { error } = await sendEmail({
     to: existedUser[0].email,
     ...getPasswordResetTemplate(url),
