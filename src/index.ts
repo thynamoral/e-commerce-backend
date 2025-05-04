@@ -1,15 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
-import {
-  FRONTEND_URL,
-  FRONTEND_URL_PRODUCTION,
-  NODE_ENV,
-  PORT,
-} from "./configs/env.config";
+import { PORT } from "./configs/env.config";
 import errorHandlder from "./utils/errorHandler";
 import { connectDB } from "./configs/db.config";
-import cors from "cors";
+import corsConfig from "./configs/cors.config";
 import authenticate from "./middlewares/authenticate";
 import authorize from "./middlewares/authorize";
 import authRouter from "./routers/auth.router";
@@ -25,13 +20,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: NODE_ENV === "development" ? FRONTEND_URL : FRONTEND_URL_PRODUCTION,
-    credentials: true,
-  })
-);
-app.options("*", cors());
+app.use(corsConfig);
+app.options("*", corsConfig);
 
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
