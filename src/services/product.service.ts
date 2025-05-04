@@ -222,7 +222,7 @@ export const updateProduct = async (
   assertAppError(existedProduct, "Product not found", BAD_REQUEST);
 
   // update product
-  const { product_name, price, category_id, delete_image_ids } =
+  const { product_name, price, category_id, stock_quantity, delete_image_ids } =
     updateProductPayload;
   const {
     rows: [updatedProduct],
@@ -239,6 +239,17 @@ export const updateProduct = async (
   assertAppError(
     rowCount === 1,
     "Failed to update product",
+    INTERNAL_SERVER_ERROR
+  );
+
+  // update product inventory
+  const { rowCount: updatedProductInventoryCount } = await db.query(
+    "UPDATE product_inventories SET stock_quantity = $1 WHERE product_id = $2",
+    [stock_quantity, id]
+  );
+  assertAppError(
+    updatedProductInventoryCount === 1,
+    "Failed to update product inventory",
     INTERNAL_SERVER_ERROR
   );
 
