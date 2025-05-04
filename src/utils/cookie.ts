@@ -41,8 +41,9 @@ export const setAuthCookies = (
 
 export const clearAuthCookies = (res: Response) => {
   return res
-    .clearCookie(ACESS_TOKEN_COOKIE_NAME)
+    .clearCookie(ACESS_TOKEN_COOKIE_NAME, defaultCookieOptions)
     .clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
+      ...defaultCookieOptions,
       path: REFRESH_TOKEN_COOKIE_PATH,
     });
 };
