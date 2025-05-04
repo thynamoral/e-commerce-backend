@@ -6,10 +6,12 @@ export const ACESS_TOKEN_COOKIE_NAME = "accessToken";
 export const REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 export const REFRESH_TOKEN_COOKIE_PATH = "/auth/token/refresh";
 
+const isProduction = NODE_ENV === "production";
+
 export const defaultCookieOptions: CookieOptions = {
-  sameSite: "strict",
+  sameSite: isProduction ? "none" : "strict",
   httpOnly: true,
-  secure: NODE_ENV !== "development",
+  secure: isProduction,
 };
 
 export const getAcessTokenCookieOptions = (): CookieOptions => ({
