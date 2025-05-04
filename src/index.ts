@@ -1,14 +1,11 @@
 import "dotenv/config";
 import express from "express";
 import cookieParser from "cookie-parser";
-import {
-  FRONTEND_URL,
-  FRONTEND_URL_PRODUCTION,
-  PORT,
-} from "./configs/env.config";
+import cors from "cors";
 import errorHandlder from "./utils/errorHandler";
 import { connectDB } from "./configs/db.config";
-import cors from "cors";
+import { corsOptions } from "./configs/cors.config";
+import { FRONTEND_URL_PRODUCTION, PORT } from "./configs/env.config";
 import authenticate from "./middlewares/authenticate";
 import authorize from "./middlewares/authorize";
 import authRouter from "./routers/auth.router";
@@ -21,15 +18,18 @@ import dashboardRouter from "./routers/dashboard.router";
 
 const app = express();
 
+app.use((req, res, next) => {
+  // debug request origin
+  console.log("Incoming request origin", req.headers.origin);
+  console.log("Allow origin", FRONTEND_URL_PRODUCTION);
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: [FRONTEND_URL, FRONTEND_URL_PRODUCTION],
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
