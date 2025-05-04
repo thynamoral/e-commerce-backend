@@ -1,5 +1,10 @@
 import db from "../configs/db.config";
-import { FRONTEND_URL, JWT_REFRESH_SECRET } from "../configs/env.config";
+import {
+  FRONTEND_URL,
+  FRONTEND_URL_PRODUCTION,
+  JWT_REFRESH_SECRET,
+  NODE_ENV,
+} from "../configs/env.config";
 import { Session } from "../entities/Session.entity";
 import User from "../entities/User.entity";
 import { VerificationCode } from "../entities/VerificationCode.entity";
@@ -51,12 +56,7 @@ const registerAccount = async (payload: RegisterAccountParams) => {
   );
 
   // send email verification
-  const { error } = await sendEmailVerification(createdUser[0]);
-  assertAppError(
-    !error,
-    "Failed to send email verification",
-    INTERNAL_SERVER_ERROR
-  );
+  await sendEmailVerification(createdUser[0]);
 
   return createdUser[0];
 };
@@ -79,7 +79,7 @@ const sendEmailVerification = async (user: User) => {
     [user.user_id, VerificationType.VERIFY_EMAIL]
   );
   const expiredMs = convertToMs(createdVerificationCode[0].expiredat);
-  const url = `${FRONTEND_URL}/email/verify?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
+  const url = `${NODE_ENV === "development" ? FRONTEND_URL : FRONTEND_URL_PRODUCTION}/email/verify?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
   const { error } = await sendEmail({
     to: user.email,
     ...getVerifyEmailTemplate(url),
