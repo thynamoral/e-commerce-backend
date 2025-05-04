@@ -34,9 +34,9 @@ export const getCurrentCategoryHandler = asyncRequestHandler(
     // get params and validate id
     const id = categoryIdSchema.parse(req.params.id);
     // call service
-    const product = await getCurrentCategory(id);
+    const category = await getCurrentCategory(id);
     // response
-    res.status(OK).json(product);
+    res.status(OK).json(category);
   }
 );
 
