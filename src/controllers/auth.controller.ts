@@ -9,11 +9,8 @@ import asyncRequestHandler from "../utils/asyncRequestHandler";
 import authService, { logout } from "../services/auth.service";
 import { BAD_REQUEST, CREATED, OK, UNAUTHORIZED } from "../utils/httpStatus";
 import {
-  ACESS_TOKEN_COOKIE_NAME,
   clearAuthCookies,
   getAcessTokenCookieOptions,
-  getRefreshTokenCookieOptions,
-  REFRESH_TOKEN_COOKIE_NAME,
   setAuthCookies,
 } from "../utils/cookie";
 import { assertAppError } from "../utils/assertAppError";
@@ -80,12 +77,11 @@ export const resetPasswordHandler = asyncRequestHandler(async (req, res) => {
 export const refreshTokenHandler = asyncRequestHandler(async (req, res) => {
   // validate refreshToken cookies
   const refreshToken = req.cookies.refreshToken as string | undefined;
-  assertAppError(refreshToken, "refreshToken is required", UNAUTHORIZED);
   // call service
-  const { accessToken } = await authService.refreshToken(refreshToken);
+  const { accessToken } = await authService.refreshToken(refreshToken || "");
 
   return res
-    .cookie(ACESS_TOKEN_COOKIE_NAME, accessToken, getAcessTokenCookieOptions())
+    .cookie("accessToken", accessToken, getAcessTokenCookieOptions())
     .status(OK)
     .json({
       message: "Token refreshed successfully",

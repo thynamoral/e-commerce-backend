@@ -281,7 +281,7 @@ const resetPassword = async (resetPasswordPayload: ResetPasswordParams) => {
 
 const refreshToken = async (refreshToken: string) => {
   // verify refreshToken
-  console.log(refreshToken);
+  console.log(`refreshToken: ${refreshToken}`);
   const { decodedPayload, error } = verifyToken<RefreshTokenPayload>(
     refreshToken,
     { secret: defaultRefreshTokenSignOptions.secret }
