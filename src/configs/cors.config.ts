@@ -1,9 +1,16 @@
-import cors from "cors";
-import { NODE_ENV, FRONTEND_URL, FRONTEND_URL_PRODUCTION } from "./env.config";
+import { CorsOptions } from "cors";
+import { FRONTEND_URL, FRONTEND_URL_PRODUCTION } from "./env.config";
 
-const corsOptions = {
-  origin: NODE_ENV === "development" ? FRONTEND_URL : FRONTEND_URL_PRODUCTION,
+const allowedOrigins = [FRONTEND_URL, FRONTEND_URL_PRODUCTION];
+
+export const corsOptions: CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("Blocked origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
 };
-
-export default cors(corsOptions);
