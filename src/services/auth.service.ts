@@ -80,11 +80,10 @@ const sendEmailVerification = async (user: User) => {
   );
   const expiredMs = convertToMs(createdVerificationCode[0].expiredat);
   const url = `${NODE_ENV === "development" ? FRONTEND_URL : FRONTEND_URL_PRODUCTION}/email/verify?code=${createdVerificationCode[0].verification_code_id}&exp=${expiredMs}`;
-  const { error } = await sendEmail({
+  await sendEmail({
     to: user.email,
     ...getVerifyEmailTemplate(url),
   });
-  return { error };
 };
 
 type LoginParams = {

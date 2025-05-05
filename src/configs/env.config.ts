@@ -14,6 +14,7 @@ export const SALT_ROUND = getENV("SALT_ROUND");
 export const FRONTEND_URL = getENV("FRONTEND_URL");
 export const FRONTEND_URL_PRODUCTION = getENV("FRONTEND_URL_PRODUCTION");
 export const EMAIL_SENDER = getENV("EMAIL_SENDER");
+export const APP_PASSWORD = getENV("APP_PASSWORD");
 export const RESEND_API_KEY = getENV("RESEND_API_KEY");
 export const JWT_ACESS_SECRET = getENV("JWT_ACESS_SECRET");
 export const JWT_REFRESH_SECRET = getENV("JWT_REFRESH_SECRET");
