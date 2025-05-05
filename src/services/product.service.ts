@@ -132,10 +132,10 @@ export const getProducts = async (
     LEFT JOIN categories ON products.category_id = categories.category_id
     ${whereClause}
     ORDER BY products.createdat DESC
-    LIMIT $${index++} OFFSET $${index}
+    -- LIMIT $${index++} OFFSET $${index}
   `;
 
-  values.push(limit, offset);
+  // values.push(limit, offset);
 
   const { rows: products } = await db.query<GetProductsResponse>(query, values);
   assertAppError(products.length > 0, "Products not found", BAD_REQUEST);
